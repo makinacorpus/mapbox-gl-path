@@ -80,38 +80,49 @@ export default class MapboxPathControl implements IControl {
   private onClickMap(event: MapMouseEvent): void {
     console.log("onClickMap");
 
-    const referencePoint: Feature = {
-      type: "Feature",
-      geometry: {
-        type: "Point",
-        coordinates: [event.lngLat.lng, event.lngLat.lat],
-      },
-      properties: { id: this.referencePoints.length + 1 },
-    };
-    this.referencePoints.push(referencePoint);
+    const referencePointIsUnderMouse: boolean = Boolean(
+      this.map!.queryRenderedFeatures(event.point, {
+        layers: ["reference-points-circle"],
+      }).length
+    );
 
-    if (this.referencePoints.length > 1) {
-      const previousReferencePoint = this.referencePoints[
-        this.referencePoints.length - 2
-      ];
-      const lineBetweenReferencePoint: Feature = {
+    if (!referencePointIsUnderMouse) {
+      const referencePoint: Feature = {
         type: "Feature",
         geometry: {
-          type: "LineString",
-          coordinates: [
-            (previousReferencePoint.geometry as any).coordinates,
-            [event.lngLat.lng, event.lngLat.lat],
-          ],
+          type: "Point",
+          coordinates: [event.lngLat.lng, event.lngLat.lat],
         },
         properties: { id: this.referencePoints.length + 1 },
       };
-      this.linesBetweenReferencePoints.push(lineBetweenReferencePoint);
-    }
+      this.referencePoints.push(referencePoint);
 
-    const data: GeoJSON.FeatureCollection<GeoJSON.Geometry> = {
-      type: "FeatureCollection",
-      features: [...this.referencePoints, ...this.linesBetweenReferencePoints],
-    };
-    (this.map!.getSource("points-and-lines") as GeoJSONSource).setData(data);
+      if (this.referencePoints.length > 1) {
+        const previousReferencePoint = this.referencePoints[
+          this.referencePoints.length - 2
+        ];
+        const lineBetweenReferencePoint: Feature = {
+          type: "Feature",
+          geometry: {
+            type: "LineString",
+            coordinates: [
+              (previousReferencePoint.geometry as any).coordinates,
+              [event.lngLat.lng, event.lngLat.lat],
+            ],
+          },
+          properties: { id: this.referencePoints.length + 1 },
+        };
+        this.linesBetweenReferencePoints.push(lineBetweenReferencePoint);
+      }
+
+      const data: GeoJSON.FeatureCollection<GeoJSON.Geometry> = {
+        type: "FeatureCollection",
+        features: [
+          ...this.referencePoints,
+          ...this.linesBetweenReferencePoints,
+        ],
+      };
+      (this.map!.getSource("points-and-lines") as GeoJSONSource).setData(data);
+    }
   }
 }
