@@ -12,6 +12,7 @@ import {
   referencePointsCircleLayer,
   referencePointsTextLayer,
   betweenPointsLineLayer,
+  dashedLineLayer,
   LayersCustomisation,
 } from "./source-and-layers";
 import { languages, AvailableLanguages } from "./i18n";
@@ -22,7 +23,17 @@ interface DirectionsTheme {
   name: string;
   getPathByCoordinates: (
     coordinates: number[][]
-  ) => Promise<number[][] | undefined>;
+  ) => Promise<DirectionsThemeResponse | undefined>;
+}
+
+interface DirectionsThemeResponse {
+  coordinates: number[][];
+  waypoints: Waypoints | undefined;
+}
+
+interface Waypoints {
+  departure: number[];
+  arrival: number[];
 }
 
 export default class MapboxPathControl implements IControl {
@@ -32,6 +43,7 @@ export default class MapboxPathControl implements IControl {
   private referencePoints: Feature<Point>[] = [];
   private selectedReferencePointIndex: number | undefined;
   private linesBetweenReferencePoints: Feature<LineString>[] = [];
+  private dashedLines: Feature<LineString>[] = [];
   private onMovePointFunction = (event: MapMouseEvent) =>
     this.onMovePoint(event);
   private changeDirectionsModeOnPreviousLineWithDebounce = debounce(
@@ -190,6 +202,16 @@ export default class MapboxPathControl implements IControl {
         : betweenPointsLineLayer,
       pointCircleLayerId
     );
+    this.map!.addLayer(
+      this.layersCustomisation &&
+        this.layersCustomisation.dashedLineLayerCustomisation
+        ? {
+            ...dashedLineLayer,
+            ...this.layersCustomisation.dashedLineLayerCustomisation,
+          }
+        : dashedLineLayer,
+      pointCircleLayerId
+    );
   }
 
   private initializeEvents(): void {
@@ -247,14 +269,18 @@ export default class MapboxPathControl implements IControl {
           this.createNewPointAndLine(
             newPointCoordinates,
             this.directionsIsActive,
-            line
+            this.directionsIsActive
+              ? (line as DirectionsThemeResponse).coordinates
+              : (line as number[][]),
+            undefined,
+            undefined,
+            this.directionsIsActive
+              ? (line as DirectionsThemeResponse).waypoints
+              : undefined
           );
         }
       } else {
-        this.createNewPointAndLine(
-          newPointCoordinates,
-          this.directionsIsActive
-        );
+        this.createNewPointAndLine(newPointCoordinates);
       }
     }
   }
@@ -447,10 +473,11 @@ export default class MapboxPathControl implements IControl {
 
   private createNewPointAndLine(
     newPointCoordinates: number[],
-    directionsIsActive: boolean,
+    directionsIsActive?: boolean,
     previousLineCoordinates?: number[][],
     nextLineCoordinates?: number[][],
-    currentLineIndex?: number
+    currentLineIndex?: number,
+    waypoints?: Waypoints
   ): void {
     const referencePoint: Feature<Point> = {
       type: "Feature",
@@ -475,10 +502,25 @@ export default class MapboxPathControl implements IControl {
           coordinates: previousLineCoordinates,
         },
         properties: {
-          index: this.linesBetweenReferencePoints.length,
+          index:
+            currentLineIndex !== undefined
+              ? currentLineIndex
+              : this.linesBetweenReferencePoints.length,
           directionsIsActive,
         },
       };
+
+      if (waypoints) {
+        this.addDashedLines(
+          this.linesBetweenReferencePoints.length,
+          [
+            this.referencePoints[this.referencePoints.length - 2].geometry
+              .coordinates,
+            waypoints.departure,
+          ],
+          [waypoints.arrival, newPointCoordinates]
+        );
+      }
 
       if (currentLineIndex !== undefined) {
         this.linesBetweenReferencePoints.splice(
@@ -501,10 +543,18 @@ export default class MapboxPathControl implements IControl {
           coordinates: nextLineCoordinates,
         },
         properties: {
-          index: this.linesBetweenReferencePoints.length,
+          index: currentLineIndex! + 1,
           directionsIsActive,
         },
       };
+      const dashedLine = this.dashedLines.find(
+        (dashedLine) =>
+          dashedLine.properties!.index === currentLineIndex &&
+          dashedLine.properties!.isDeparture === false
+      );
+      if (dashedLine) {
+        dashedLine.properties!.index = currentLineIndex! + 1;
+      }
 
       if (currentLineIndex !== undefined) {
         this.linesBetweenReferencePoints.splice(
@@ -550,7 +600,14 @@ export default class MapboxPathControl implements IControl {
       this.createNewPointAndLine(
         nearestPoint.geometry.coordinates,
         this.directionsIsActive,
-        line
+        this.directionsIsActive
+          ? (line as DirectionsThemeResponse).coordinates
+          : (line as number[][]),
+        undefined,
+        undefined,
+        this.directionsIsActive
+          ? (line as DirectionsThemeResponse).waypoints
+          : undefined
       );
 
       this.updateSource();
@@ -599,6 +656,10 @@ export default class MapboxPathControl implements IControl {
       this.referencePoints.shift();
       if (this.referencePoints.length > 0) {
         this.linesBetweenReferencePoints.shift();
+        this.dashedLines = this.dashedLines.filter(
+          (dashedLine) =>
+            dashedLine.properties!.index !== nextLine.properties!.index
+        );
       }
       this.syncIndex();
     } else if (
@@ -610,6 +671,11 @@ export default class MapboxPathControl implements IControl {
         previousLine.properties!.index,
         1
       );
+      this.syncIndex();
+      this.dashedLines = this.dashedLines.filter(
+        (dashedLine) =>
+          dashedLine.properties!.index !== previousLine.properties!.index
+      );
     } else {
       const previousPoint = this.referencePoints[
         this.selectedReferencePointIndex! - 1
@@ -617,29 +683,61 @@ export default class MapboxPathControl implements IControl {
       const nextPoint = this.referencePoints[
         this.selectedReferencePointIndex! + 1
       ];
+
+      this.dashedLines = this.dashedLines.filter(
+        (dashedLine) =>
+          dashedLine.properties!.index !== previousLine.properties!.index &&
+          dashedLine.properties!.index !== nextLine.properties!.index
+      );
       if (
         !previousLine.properties!.directionsIsActive ||
         !nextLine.properties!.directionsIsActive
       ) {
-        this.linesBetweenReferencePoints[
+        const lineBetweenReferencePoint = this.linesBetweenReferencePoints[
           previousLine.properties!.index
-        ]!.geometry.coordinates = [
-          previousPoint.geometry.coordinates,
-          nextPoint.geometry.coordinates,
         ];
+        this.linesBetweenReferencePoints[previousLine.properties!.index] = {
+          ...lineBetweenReferencePoint,
+          geometry: {
+            ...lineBetweenReferencePoint.geometry,
+            coordinates: [
+              previousPoint.geometry.coordinates,
+              nextPoint.geometry.coordinates,
+            ],
+          },
+          properties: {
+            ...lineBetweenReferencePoint.properties,
+            directionsIsActive: false,
+          },
+        };
       } else {
-        const coordinates = await this.selectedDirectionsTheme!.getPathByCoordinates(
+        const directionsResponse = await this.selectedDirectionsTheme!.getPathByCoordinates(
           [previousPoint.geometry.coordinates, nextPoint.geometry.coordinates]
         );
 
         this.linesBetweenReferencePoints[
           previousLine.properties!.index
-        ]!.geometry.coordinates = coordinates
-          ? coordinates
-          : [
+        ]!.geometry.coordinates =
+          directionsResponse && directionsResponse.coordinates
+            ? directionsResponse.coordinates
+            : [
+                previousPoint.geometry.coordinates,
+                nextPoint.geometry.coordinates,
+              ];
+
+        if (directionsResponse?.waypoints) {
+          this.addDashedLines(
+            previousLine.properties!.index,
+            [
               previousPoint.geometry.coordinates,
+              directionsResponse.waypoints.departure,
+            ],
+            [
+              directionsResponse.waypoints.arrival,
               nextPoint.geometry.coordinates,
-            ];
+            ]
+          );
+        }
       }
       this.referencePoints.splice(this.selectedReferencePointIndex!, 1);
       this.linesBetweenReferencePoints.splice(nextLine.properties!.index, 1);
@@ -653,7 +751,11 @@ export default class MapboxPathControl implements IControl {
   private updateSource(): void {
     const data: GeoJSON.FeatureCollection<GeoJSON.Geometry> = {
       type: "FeatureCollection",
-      features: [...this.referencePoints, ...this.linesBetweenReferencePoints],
+      features: [
+        ...this.referencePoints,
+        ...this.linesBetweenReferencePoints,
+        ...this.dashedLines,
+      ],
     };
     (this.map!.getSource(sourcePointAndLineId) as GeoJSONSource).setData(data);
   }
@@ -662,9 +764,16 @@ export default class MapboxPathControl implements IControl {
     this.referencePoints.forEach(
       (point, index) => (point.properties!.index = index)
     );
-    this.linesBetweenReferencePoints.forEach(
-      (line, index) => (line.properties!.index = index)
-    );
+    this.linesBetweenReferencePoints.forEach((line, index) => {
+      if (line.properties!.index !== index) {
+        this.dashedLines.forEach((dashedLine) => {
+          if (dashedLine.properties!.index === line.properties!.index) {
+            dashedLine.properties!.index = index;
+          }
+        });
+      }
+      line.properties!.index = index;
+    });
   }
 
   private async changeDirectionsModeOnLine(
@@ -679,11 +788,33 @@ export default class MapboxPathControl implements IControl {
         previousPoint.geometry.coordinates,
         nextPoint.geometry.coordinates,
       ];
+      this.dashedLines = this.dashedLines.filter(
+        (dashedLine) => dashedLine.properties!.index !== line.properties!.index
+      );
     } else {
-      coordinates = await this.selectedDirectionsTheme!.getPathByCoordinates([
-        previousPoint.geometry.coordinates,
-        nextPoint.geometry.coordinates,
-      ]);
+      const directionsResponse = await this.selectedDirectionsTheme!.getPathByCoordinates(
+        [previousPoint.geometry.coordinates, nextPoint.geometry.coordinates]
+      );
+      if (directionsResponse && directionsResponse.coordinates) {
+        coordinates = directionsResponse.coordinates;
+        this.dashedLines = this.dashedLines.filter(
+          (dashedLine) =>
+            dashedLine.properties!.index !== line.properties!.index
+        );
+        if (directionsResponse?.waypoints) {
+          this.addDashedLines(
+            line.properties!.index,
+            [
+              previousPoint.geometry.coordinates,
+              directionsResponse.waypoints.departure,
+            ],
+            [
+              directionsResponse.waypoints.arrival,
+              nextPoint.geometry.coordinates,
+            ]
+          );
+        }
+      }
     }
     if (coordinates) {
       this.linesBetweenReferencePoints.splice(line.properties!.index, 1, {
@@ -706,7 +837,45 @@ export default class MapboxPathControl implements IControl {
   public getFeatureCollection(): GeoJSON.FeatureCollection<GeoJSON.Geometry> {
     return {
       type: "FeatureCollection",
-      features: [...this.referencePoints, ...this.linesBetweenReferencePoints],
+      features: [
+        ...this.referencePoints,
+        ...this.linesBetweenReferencePoints,
+        ...this.dashedLines,
+      ],
     };
+  }
+
+  private addDashedLines(
+    index: number,
+    departure: number[][],
+    arrival: number[][]
+  ): void {
+    const dashedLines: Feature<LineString>[] = [
+      {
+        type: "Feature",
+        geometry: {
+          type: "LineString",
+          coordinates: departure,
+        },
+        properties: {
+          index,
+          isDashed: true,
+          isDeparture: true,
+        },
+      },
+      {
+        type: "Feature",
+        geometry: {
+          type: "LineString",
+          coordinates: arrival,
+        },
+        properties: {
+          index,
+          isDashed: true,
+          isDeparture: false,
+        },
+      },
+    ];
+    this.dashedLines = [...this.dashedLines, ...dashedLines];
   }
 }
