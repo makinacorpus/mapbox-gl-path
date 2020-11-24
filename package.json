@@ -16,6 +16,7 @@
   "devDependencies": {
     "@rollup/plugin-html": "^0.2.0",
     "@rollup/plugin-typescript": "^6.0.0",
+    "@types/geojson": "^7946.0.7",
     "@types/mapbox-gl": "^1.12.2",
     "prettier": "^2.1.2",
     "rollup": "^2.29.0",
