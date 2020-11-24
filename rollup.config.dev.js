@@ -32,7 +32,27 @@ export default [
           const content = `<div id="map" style="width: 100vw; height: 100vh;"></div>`;
           const scriptMapbox = `<script src="https://api.mapbox.com/mapbox-gl-js/v1.12.0/mapbox-gl.js"></script>`;
           const languageId = `'fr'`;
-          const layersCustomisation = `undefined`;
+          const layersCustomisation = `{
+            pointCircleLayerCustomisation: {
+              paint: {
+                "circle-radius": 10,
+                "circle-color": "#FFFFFF",
+                "circle-stroke-width": 1,
+                "circle-stroke-color": "#0D47A1",
+              },
+            },
+            pointTextLayerCustomisation: { paint: { "text-color": "#B71C1C" } },
+            lineLayerCustomisation: {
+              paint: { "line-width": 10, "line-color": "#0D47A1" },
+            },
+            dashedLineLayerCustomisation: {
+              paint: {
+                "line-width": 10,
+                "line-color": "#0D47A1",
+                "line-dasharray": [1, 1],
+              },
+            },
+          }`;
           const featureCollection = `undefined`;
           const directionsThemes = `[{
             id: 1,
@@ -49,10 +69,9 @@ export default [
                 }
               )
                 .then((response) => response.json())
-                .then((data) =>
-                  data.code === "Ok"
-                    ? data.routes[0].geometry.coordinates
-                    : undefined
+                .then((data) => data.code === "Ok"
+                      ? { coordinates: data.routes[0].geometry.coordinates, waypoints: { departure: data.waypoints[0].location, arrival: data.waypoints[1].location }}
+                      : undefined
                 )
           },
           {
@@ -70,15 +89,13 @@ export default [
                 }
               )
                 .then((response) => response.json())
-                .then((data) =>
-                  data.code === "Ok"
-                    ? data.routes[0].geometry.coordinates
-                    : undefined
+                .then((data) => data.code === "Ok"
+                      ? { coordinates: data.routes[0].geometry.coordinates, waypoints: { departure: data.waypoints[0].location, arrival: data.waypoints[1].location }}
+                      : undefined
                 )
           }
         ]`;
-
-          const scriptPage = `<script type="module">import MapboxRathControl from "./index.js"; mapboxgl.accessToken = ${mapboxglToken}; var map = new mapboxgl.Map({ container: "map", style: "mapbox://styles/mapbox/light-v10", center: [2.21, 46.22], zoom: 5 }); window.mapboxRathControl = new MapboxRathControl(${languageId}, ${layersCustomisation}, ${featureCollection}, ${directionsThemes}); map.addControl(window.mapboxRathControl);</script>`;
+          const scriptPage = `<script type="module">import MapboxPathControl from "./index.js"; mapboxgl.accessToken = ${mapboxglToken}; var map = new mapboxgl.Map({ container: "map", style: "mapbox://styles/mapbox/light-v10", center: [2.21, 46.22], zoom: 5 }); window.mapboxPathControl = new MapboxPathControl(${languageId}, ${layersCustomisation}, ${featureCollection}, ${directionsThemes}); map.addControl(window.mapboxPathControl);</script>`;
           const scripts = `${scriptMapbox}${scriptPage}`;
           return `<!DOCTYPE html><html ${attribute}><head>${meta}<title>${title}</title>${links}</head><body style="margin: 0">${content}${scripts}</body></html>`;
         },
