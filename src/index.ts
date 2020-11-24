@@ -7,6 +7,7 @@ import {
   GeoJSONSourceRaw,
   Layer,
   MapboxGeoJSONFeature,
+  Popup,
 } from "mapbox-gl";
 import "./mapbox-gl-path.css";
 
@@ -17,6 +18,7 @@ export default class MapboxPathControl implements IControl {
   private selectedReferencePoint: Feature | undefined;
   private linesBetweenReferencePoints: Feature[] = [];
   private onMovePointBind = this.onMovePoint.bind(this);
+  private actionsPanelOnPoint: Popup = new Popup();
 
   constructor() {}
 
@@ -73,8 +75,13 @@ export default class MapboxPathControl implements IControl {
     this.map!.addLayer(referencePointsLayerLine, "reference-points-circle");
 
     this.map!.on("click", this.onClickMap.bind(this));
+    this.map!.on(
+      "contextmenu",
+      "reference-points-circle",
+      this.onContextMenuPoint.bind(this)
+    );
     this.map!.on("mouseenter", "reference-points-circle", () => {
-      this.map!.getCanvas().style.cursor = "pointer";
+      this.map!.getCanvas().style.cursor = "grab";
     });
     this.map!.on("mouseleave", "reference-points-circle", () => {
       this.map!.getCanvas().style.cursor = "";
@@ -146,9 +153,13 @@ export default class MapboxPathControl implements IControl {
 
   private onMovePoint(event: MapMouseEvent): void {
     this.map!.getCanvas().style.cursor = "grabbing";
+
+    if (this.actionsPanelOnPoint.isOpen()) {
+      this.actionsPanelOnPoint.remove();
+    }
+
     (this.referencePoints[this.selectedReferencePoint!.properties!.index]
       .geometry as any).coordinates = [event.lngLat.lng, event.lngLat.lat];
-
     if (
       this.selectedReferencePoint!.properties!.index === 0 &&
       this.referencePoints.length > 1
@@ -202,5 +213,85 @@ export default class MapboxPathControl implements IControl {
   private onUpPoint(): void {
     this.map!.off("mousemove", this.onMovePointBind);
     this.map!.getCanvas().style.cursor = "grab";
+  }
+
+  private onContextMenuPoint(event: MapMouseEvent): void {
+    event.preventDefault();
+    const referencePointsUnderMouse: MapboxGeoJSONFeature[] = this.map!.queryRenderedFeatures(
+      event.point,
+      {
+        layers: ["reference-points-circle"],
+      }
+    );
+
+    if (referencePointsUnderMouse && referencePointsUnderMouse.length > 0) {
+      this.selectedReferencePoint = referencePointsUnderMouse[0];
+      const deleteButton = document.createElement("button");
+      deleteButton.innerHTML = "Supprimer";
+      deleteButton.setAttribute("type", "button");
+      deleteButton.onclick = this.deletePoint.bind(this);
+      this.actionsPanelOnPoint
+        .setLngLat([event.lngLat.lng, event.lngLat.lat])
+        .setDOMContent(deleteButton)
+        .addTo(this.map!);
+    }
+  }
+
+  private deletePoint(): void {
+    if (this.selectedReferencePoint!.properties!.index === 0) {
+      this.referencePoints.shift();
+      if (this.referencePoints.length > 0) {
+        this.linesBetweenReferencePoints.shift();
+      }
+      this.syncIndex();
+    } else if (
+      this.selectedReferencePoint!.properties!.index ===
+      this.referencePoints.length - 1
+    ) {
+      this.referencePoints.splice(
+        this.selectedReferencePoint!.properties!.index,
+        1
+      );
+      this.linesBetweenReferencePoints.splice(
+        this.selectedReferencePoint!.properties!.index - 1,
+        1
+      );
+    } else {
+      (this.linesBetweenReferencePoints[
+        this.selectedReferencePoint!.properties!.index - 1
+      ]!.geometry as any).coordinates = [
+        (this.referencePoints[
+          this.selectedReferencePoint!.properties!.index - 1
+        ].geometry as any).coordinates,
+        (this.referencePoints[
+          this.selectedReferencePoint!.properties!.index + 1
+        ].geometry as any).coordinates,
+      ];
+      this.referencePoints.splice(
+        this.selectedReferencePoint!.properties!.index,
+        1
+      );
+      this.linesBetweenReferencePoints.splice(
+        this.selectedReferencePoint!.properties!.index,
+        1
+      );
+      this.syncIndex();
+    }
+
+    const data: GeoJSON.FeatureCollection<GeoJSON.Geometry> = {
+      type: "FeatureCollection",
+      features: [...this.referencePoints, ...this.linesBetweenReferencePoints],
+    };
+    (this.map!.getSource("points-and-lines") as GeoJSONSource).setData(data);
+    this.actionsPanelOnPoint.remove();
+  }
+
+  private syncIndex(): void {
+    this.referencePoints.map((point, index) => {
+      point.properties!.index = index;
+    });
+    this.linesBetweenReferencePoints.map((line, index) => {
+      line.properties!.index = index;
+    });
   }
 }

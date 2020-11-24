@@ -8,6 +8,7 @@ export default [
       dir: "dist",
       format: "es",
     },
+    external: ["mapbox-gl"],
     plugins: [typescript(), css({ output: "./dist/mapbox-gl-path.css" })],
   },
 ];

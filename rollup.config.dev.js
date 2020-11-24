@@ -1,3 +1,5 @@
+import resolve from "@rollup/plugin-node-resolve";
+import commonjs from "@rollup/plugin-commonjs";
 import typescript from "@rollup/plugin-typescript";
 import html from "@rollup/plugin-html";
 import css from "rollup-plugin-css-only";
@@ -14,6 +16,8 @@ export default [
       format: "es",
     },
     plugins: [
+      resolve(),
+      commonjs(),
       typescript(),
       html({
         fileName: "index.html",
