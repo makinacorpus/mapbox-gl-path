@@ -38,8 +38,34 @@ export default class MapboxPathControl implements IControl {
   private actionsPanel: Popup = new Popup();
   private directionsIsActive = false;
 
-  constructor(mapboxToken: string) {
+  constructor(
+    mapboxToken: string,
+    featureCollection: GeoJSON.FeatureCollection<GeoJSON.Geometry> | undefined
+  ) {
     this.mapboxToken = mapboxToken;
+
+    if (featureCollection) {
+      this.referencePoints = featureCollection.features
+        .filter((feature) => feature.geometry.type === "Point")
+        .sort((a, b) => {
+          if (a.properties!.index > b.properties!.index) {
+            return 1;
+          } else if (a.properties!.index < b.properties!.index) {
+            return -1;
+          }
+          return 0;
+        }) as Feature<Point>[];
+      this.linesBetweenReferencePoints = featureCollection.features
+        .filter((feature) => feature.geometry.type === "LineString")
+        .sort((a, b) => {
+          if (a.properties!.index > b.properties!.index) {
+            return 1;
+          } else if (a.properties!.index < b.properties!.index) {
+            return -1;
+          }
+          return 0;
+        }) as Feature<LineString>[];
+    }
   }
 
   public onAdd(currentMap: Map): HTMLElement {
@@ -89,6 +115,10 @@ export default class MapboxPathControl implements IControl {
   private configureMap(): void {
     this.initializeSourceAndLayers();
     this.initializeEvents();
+
+    if (this.referencePoints.length > 0) {
+      this.updateSource();
+    }
   }
 
   private initializeSourceAndLayers(): void {
@@ -596,5 +626,12 @@ export default class MapboxPathControl implements IControl {
       this.updateSource();
       this.actionsPanel.remove();
     }
+  }
+
+  public getFeatureCollection(): GeoJSON.FeatureCollection<GeoJSON.Geometry> {
+    return {
+      type: "FeatureCollection",
+      features: [...this.referencePoints, ...this.linesBetweenReferencePoints],
+    };
   }
 }
