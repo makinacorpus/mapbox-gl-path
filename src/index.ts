@@ -12,6 +12,7 @@ import {
   referencePointsCircleLayer,
   referencePointsTextLayer,
   betweenPointsLineLayer,
+  LayersCustomisation,
 } from "./source-and-layers";
 import { getPathByCoordinates } from "./mapbox-directions-service";
 import "./mapbox-gl-path.css";
@@ -37,12 +38,15 @@ export default class MapboxPathControl implements IControl {
   );
   private actionsPanel: Popup = new Popup();
   private directionsIsActive = false;
+  private layersCustomisation: LayersCustomisation | undefined;
 
   constructor(
     mapboxToken: string,
+    layersCustomisation: LayersCustomisation | undefined,
     featureCollection: GeoJSON.FeatureCollection<GeoJSON.Geometry> | undefined
   ) {
     this.mapboxToken = mapboxToken;
+    this.layersCustomisation = layersCustomisation;
 
     if (featureCollection) {
       this.referencePoints = featureCollection.features
@@ -123,9 +127,34 @@ export default class MapboxPathControl implements IControl {
 
   private initializeSourceAndLayers(): void {
     this.map!.addSource(sourcePointAndLineId, pointsAndLinesSource);
-    this.map!.addLayer(referencePointsCircleLayer);
-    this.map!.addLayer(referencePointsTextLayer);
-    this.map!.addLayer(betweenPointsLineLayer, pointCircleLayerId);
+    this.map!.addLayer(
+      this.layersCustomisation &&
+        this.layersCustomisation.pointCircleLayerCustomisation
+        ? {
+            ...referencePointsCircleLayer,
+            ...this.layersCustomisation.pointCircleLayerCustomisation,
+          }
+        : referencePointsCircleLayer
+    );
+    this.map!.addLayer(
+      this.layersCustomisation &&
+        this.layersCustomisation.pointTextLayerCustomisation
+        ? {
+            ...referencePointsTextLayer,
+            ...this.layersCustomisation.pointTextLayerCustomisation,
+          }
+        : referencePointsTextLayer
+    );
+    this.map!.addLayer(
+      this.layersCustomisation &&
+        this.layersCustomisation.lineLayerCustomisation
+        ? {
+            ...betweenPointsLineLayer,
+            ...this.layersCustomisation.lineLayerCustomisation,
+          }
+        : betweenPointsLineLayer,
+      pointCircleLayerId
+    );
   }
 
   private initializeEvents(): void {

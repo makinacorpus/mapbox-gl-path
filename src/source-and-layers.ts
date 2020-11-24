@@ -1,4 +1,4 @@
-import { Layer, GeoJSONSourceRaw } from "mapbox-gl";
+import { Layer, GeoJSONSourceRaw, AnyLayout, AnyPaint } from "mapbox-gl";
 
 export const sourcePointAndLineId = "points-and-lines";
 export const pointCircleLayerId = "reference-points-circle";
@@ -37,3 +37,14 @@ export const betweenPointsLineLayer: Layer = {
   paint: { "line-color": "#000000", "line-width": 10 },
   filter: ["in", "$type", "LineString"],
 };
+
+export interface LayersCustomisation {
+  pointCircleLayerCustomisation: LayerCustomisation;
+  pointTextLayerCustomisation: LayerCustomisation;
+  lineLayerCustomisation: LayerCustomisation;
+}
+
+export interface LayerCustomisation {
+  layout: AnyLayout;
+  paint: AnyPaint;
+}
