@@ -1,4 +1,12 @@
 .mapbox-gl-path-container {
-  background-color: red;
-  color: white;
+  pointer-events: auto;
+  user-select: none;
+  background-color: #ffffff;
+  color: #000000;
+  padding: 8px;
+  border-bottom-left-radius: 8px;
+}
+
+.mapbox-gl-path-container select {
+  margin-left: 8px;
 }

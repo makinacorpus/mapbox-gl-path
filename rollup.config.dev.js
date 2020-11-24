@@ -31,7 +31,7 @@ export default [
           const links = `${linkFavicon}${linkMapbox}${linkPage}`;
           const content = `<div id="map" style="width: 100vw; height: 100vh;"></div>`;
           const scriptMapbox = `<script src="https://api.mapbox.com/mapbox-gl-js/v1.12.0/mapbox-gl.js"></script>`;
-          const scriptPage = `<script type="module">import MapboxPathControl from "./index.js"; mapboxgl.accessToken = ${mapboxglToken}; var map = new mapboxgl.Map({ container: "map", style: "mapbox://styles/mapbox/light-v10", center: [2.21, 46.22], zoom: 5 }); map.addControl(new MapboxPathControl());</script>`;
+          const scriptPage = `<script type="module">import MapboxPathControl from "./index.js"; mapboxgl.accessToken = ${mapboxglToken}; var map = new mapboxgl.Map({ container: "map", style: "mapbox://styles/mapbox/light-v10", center: [2.21, 46.22], zoom: 5 }); window.mapboxPathControl = new MapboxPathControl(${mapboxglToken}); map.addControl(window.mapboxPathControl);</script>`;
           const scripts = `${scriptMapbox}${scriptPage}`;
           return `<!DOCTYPE html><html ${attribute}><head>${meta}<title>${title}</title>${links}</head><body style="margin: 0">${content}${scripts}</body></html>`;
         },
