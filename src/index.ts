@@ -1,4 +1,4 @@
-import { Feature } from "geojson";
+import { Feature, Point, LineString } from "geojson";
 import {
   Map,
   IControl,
@@ -9,6 +9,8 @@ import {
   MapboxGeoJSONFeature,
   Popup,
 } from "mapbox-gl";
+import { point, lineString } from "@turf/helpers";
+import nearestPointOnLine from "@turf/nearest-point-on-line";
 import "./mapbox-gl-path.css";
 
 export default class MapboxPathControl implements IControl {
@@ -18,7 +20,7 @@ export default class MapboxPathControl implements IControl {
   private selectedReferencePoint: Feature | undefined;
   private linesBetweenReferencePoints: Feature[] = [];
   private onMovePointBind = this.onMovePoint.bind(this);
-  private actionsPanelOnPoint: Popup = new Popup();
+  private actionsPanel: Popup = new Popup();
 
   constructor() {}
 
@@ -66,7 +68,7 @@ export default class MapboxPathControl implements IControl {
       id: "between-points-line",
       type: "line",
       source: "points-and-lines",
-      paint: { "line-color": "#000000" },
+      paint: { "line-color": "#000000", "line-width": 10 },
       filter: ["in", "$type", "LineString"],
     };
     this.map!.addSource("points-and-lines", pointsAndLinesSource);
@@ -75,15 +77,17 @@ export default class MapboxPathControl implements IControl {
     this.map!.addLayer(referencePointsLayerLine, "reference-points-circle");
 
     this.map!.on("click", this.onClickMap.bind(this));
-    this.map!.on(
-      "contextmenu",
-      "reference-points-circle",
-      this.onContextMenuPoint.bind(this)
-    );
+    this.map!.on("contextmenu", this.onContextMenu.bind(this));
     this.map!.on("mouseenter", "reference-points-circle", () => {
-      this.map!.getCanvas().style.cursor = "grab";
+      this.map!.getCanvas().style.cursor = "pointer";
     });
     this.map!.on("mouseleave", "reference-points-circle", () => {
+      this.map!.getCanvas().style.cursor = "";
+    });
+    this.map!.on("mouseenter", "between-points-line", () => {
+      this.map!.getCanvas().style.cursor = "pointer";
+    });
+    this.map!.on("mouseleave", "between-points-line", () => {
       this.map!.getCanvas().style.cursor = "";
     });
     this.map!.on("mousedown", "reference-points-circle", (event) => {
@@ -105,13 +109,17 @@ export default class MapboxPathControl implements IControl {
   }
 
   private onClickMap(event: MapMouseEvent): void {
-    const referencePointIsUnderMouse: boolean = Boolean(
+    if (this.actionsPanel.isOpen()) {
+      this.actionsPanel.remove();
+      return;
+    }
+    const referencePointOrLineIsUnderMouse: boolean = Boolean(
       this.map!.queryRenderedFeatures(event.point, {
-        layers: ["reference-points-circle"],
+        layers: ["reference-points-circle", "between-points-line"],
       }).length
     );
 
-    if (!referencePointIsUnderMouse) {
+    if (!referencePointOrLineIsUnderMouse) {
       const referencePoint: Feature = {
         type: "Feature",
         geometry: {
@@ -135,7 +143,7 @@ export default class MapboxPathControl implements IControl {
               [event.lngLat.lng, event.lngLat.lat],
             ],
           },
-          properties: { index: this.referencePoints.length },
+          properties: { index: this.linesBetweenReferencePoints.length },
         };
         this.linesBetweenReferencePoints.push(lineBetweenReferencePoint);
       }
@@ -154,8 +162,8 @@ export default class MapboxPathControl implements IControl {
   private onMovePoint(event: MapMouseEvent): void {
     this.map!.getCanvas().style.cursor = "grabbing";
 
-    if (this.actionsPanelOnPoint.isOpen()) {
-      this.actionsPanelOnPoint.remove();
+    if (this.actionsPanel.isOpen()) {
+      this.actionsPanel.remove();
     }
 
     (this.referencePoints[this.selectedReferencePoint!.properties!.index]
@@ -230,7 +238,7 @@ export default class MapboxPathControl implements IControl {
       deleteButton.innerHTML = "Supprimer";
       deleteButton.setAttribute("type", "button");
       deleteButton.onclick = this.deletePoint.bind(this);
-      this.actionsPanelOnPoint
+      this.actionsPanel
         .setLngLat([event.lngLat.lng, event.lngLat.lat])
         .setDOMContent(deleteButton)
         .addTo(this.map!);
@@ -283,7 +291,7 @@ export default class MapboxPathControl implements IControl {
       features: [...this.referencePoints, ...this.linesBetweenReferencePoints],
     };
     (this.map!.getSource("points-and-lines") as GeoJSONSource).setData(data);
-    this.actionsPanelOnPoint.remove();
+    this.actionsPanel.remove();
   }
 
   private syncIndex(): void {
@@ -293,5 +301,195 @@ export default class MapboxPathControl implements IControl {
     this.linesBetweenReferencePoints.map((line, index) => {
       line.properties!.index = index;
     });
+  }
+
+  private onContextMenu(event: MapMouseEvent): void {
+    const featuresUnderMouse: MapboxGeoJSONFeature[] = this.map!.queryRenderedFeatures(
+      event.point,
+      {
+        layers: ["reference-points-circle", "between-points-line"],
+      }
+    );
+    if (featuresUnderMouse.length > 0) {
+      if (
+        featuresUnderMouse.find((feature) => {
+          return feature.layer.id === "reference-points-circle";
+        })
+      ) {
+        this.onContextMenuPoint(event);
+      } else {
+        this.onContextMenuLine(event);
+      }
+    }
+  }
+
+  private onContextMenuLine(event: MapMouseEvent): void {
+    const createNewPointOnLine = document.createElement("button");
+    createNewPointOnLine.innerHTML = "Créer un nouveau point";
+    createNewPointOnLine.setAttribute("type", "button");
+    createNewPointOnLine.onclick = this.createNewPoint.bind(this, event);
+    const createIntermediatePointOnLine = document.createElement("button");
+    createIntermediatePointOnLine.innerHTML = "Créer un point intermédiaire";
+    createIntermediatePointOnLine.setAttribute("type", "button");
+    createIntermediatePointOnLine.onclick = this.createIntermediatePoint.bind(
+      this,
+      event
+    );
+    const actionsPanelContainer = document.createElement("div");
+    actionsPanelContainer.append(
+      createNewPointOnLine,
+      createIntermediatePointOnLine
+    );
+
+    this.actionsPanel
+      .setLngLat([event.lngLat.lng, event.lngLat.lat])
+      .setDOMContent(actionsPanelContainer)
+      .addTo(this.map!);
+  }
+
+  private createNewPoint(event: MapMouseEvent): void {
+    const lineUnderMouse: MapboxGeoJSONFeature[] = this.map!.queryRenderedFeatures(
+      event.point,
+      {
+        layers: ["between-points-line"],
+      }
+    );
+    if (lineUnderMouse.length > 0) {
+      const currentLineString: Feature<LineString> = lineString(
+        (lineUnderMouse[0].geometry as any).coordinates
+      );
+      const currentPoint: Feature<Point> = point([
+        event.lngLat.lng,
+        event.lngLat.lat,
+      ]);
+      const nearestPoint: Feature = nearestPointOnLine(
+        currentLineString,
+        currentPoint
+      );
+
+      const referencePoint: Feature = {
+        type: "Feature",
+        geometry: {
+          type: "Point",
+          coordinates: (nearestPoint.geometry as any).coordinates,
+        },
+        properties: { index: this.referencePoints.length },
+      };
+      this.referencePoints.push(referencePoint);
+
+      if (this.referencePoints.length > 1) {
+        const previousReferencePoint = this.referencePoints[
+          this.referencePoints.length - 2
+        ];
+        const lineBetweenReferencePoint: Feature = {
+          type: "Feature",
+          geometry: {
+            type: "LineString",
+            coordinates: [
+              (previousReferencePoint.geometry as any).coordinates,
+              (nearestPoint.geometry as any).coordinates,
+            ],
+          },
+          properties: { index: this.linesBetweenReferencePoints.length },
+        };
+        this.linesBetweenReferencePoints.push(lineBetweenReferencePoint);
+      }
+
+      const data: GeoJSON.FeatureCollection<GeoJSON.Geometry> = {
+        type: "FeatureCollection",
+        features: [
+          ...this.referencePoints,
+          ...this.linesBetweenReferencePoints,
+        ],
+      };
+      (this.map!.getSource("points-and-lines") as GeoJSONSource).setData(data);
+      this.actionsPanel.remove();
+    }
+  }
+
+  private createIntermediatePoint(event: MapMouseEvent): void {
+    console.log("createIntermediatePoint", event);
+    const lineUnderMouse: MapboxGeoJSONFeature[] = this.map!.queryRenderedFeatures(
+      event.point,
+      {
+        layers: ["between-points-line"],
+      }
+    );
+    if (lineUnderMouse.length > 0) {
+      const lineUnderMouseIndex: number = lineUnderMouse[0].properties!.index;
+      const currentLineString: Feature<LineString> = lineString(
+        (lineUnderMouse[0].geometry as any).coordinates
+      );
+      const currentPoint: Feature<Point> = point([
+        event.lngLat.lng,
+        event.lngLat.lat,
+      ]);
+      const nearestPoint: Feature = nearestPointOnLine(
+        currentLineString,
+        currentPoint
+      );
+
+      const referencePoint: Feature = {
+        type: "Feature",
+        geometry: {
+          type: "Point",
+          coordinates: (nearestPoint.geometry as any).coordinates,
+        },
+        properties: { index: this.referencePoints.length },
+      };
+      this.referencePoints.splice(lineUnderMouseIndex + 1, 0, referencePoint);
+
+      if (this.referencePoints.length > 1) {
+        const previousReferencePoint = this.referencePoints[
+          lineUnderMouseIndex
+        ];
+        const nextReferencePoint = this.referencePoints[
+          lineUnderMouseIndex + 2
+        ];
+        const previousLineBetweenReferencePoint: Feature = {
+          type: "Feature",
+          geometry: {
+            type: "LineString",
+            coordinates: [
+              (previousReferencePoint.geometry as any).coordinates,
+              (nearestPoint.geometry as any).coordinates,
+            ],
+          },
+          properties: { index: this.linesBetweenReferencePoints.length },
+        };
+        const nextLineBetweenReferencePoint: Feature = {
+          type: "Feature",
+          geometry: {
+            type: "LineString",
+            coordinates: [
+              (nearestPoint.geometry as any).coordinates,
+              (nextReferencePoint.geometry as any).coordinates,
+            ],
+          },
+          properties: { index: this.linesBetweenReferencePoints.length },
+        };
+        this.linesBetweenReferencePoints.splice(
+          lineUnderMouseIndex,
+          1,
+          previousLineBetweenReferencePoint
+        );
+        this.linesBetweenReferencePoints.splice(
+          lineUnderMouseIndex + 1,
+          0,
+          nextLineBetweenReferencePoint
+        );
+      }
+
+      this.syncIndex();
+      const data: GeoJSON.FeatureCollection<GeoJSON.Geometry> = {
+        type: "FeatureCollection",
+        features: [
+          ...this.referencePoints,
+          ...this.linesBetweenReferencePoints,
+        ],
+      };
+      (this.map!.getSource("points-and-lines") as GeoJSONSource).setData(data);
+      this.actionsPanel.remove();
+    }
   }
 }
