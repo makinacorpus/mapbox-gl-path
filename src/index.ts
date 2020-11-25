@@ -36,6 +36,13 @@ interface Waypoints {
   arrival: number[];
 }
 
+interface Parameters {
+  languageId: AvailableLanguages | undefined;
+  layersCustomisation: LayersCustomisation | undefined;
+  featureCollection: GeoJSON.FeatureCollection<GeoJSON.Geometry> | undefined;
+  directionsThemes: DirectionsTheme[] | undefined;
+}
+
 export default class MapboxPathControl implements IControl {
   private map: Map | undefined;
   private languageId: AvailableLanguages = "en";
@@ -62,49 +69,49 @@ export default class MapboxPathControl implements IControl {
   private directionsThemes: DirectionsTheme[] | undefined;
   private selectedDirectionsTheme: DirectionsTheme | undefined;
 
-  constructor(
-    languageId: AvailableLanguages | undefined,
-    layersCustomisation: LayersCustomisation | undefined,
-    featureCollection: GeoJSON.FeatureCollection<GeoJSON.Geometry> | undefined,
-    directionsThemes: DirectionsTheme[] | undefined
-  ) {
-    if (languageId) {
-      this.languageId = languageId;
-    }
+  constructor(parameters: Parameters | undefined) {
+    if (parameters) {
+      if (parameters.languageId) {
+        this.languageId = parameters.languageId;
+      }
 
-    if (directionsThemes && directionsThemes.length > 0) {
-      this.directionsThemes = directionsThemes;
-      this.selectedDirectionsTheme = directionsThemes[0];
-    }
+      if (
+        parameters.directionsThemes &&
+        parameters.directionsThemes.length > 0
+      ) {
+        this.directionsThemes = parameters.directionsThemes;
+        this.selectedDirectionsTheme = parameters.directionsThemes[0];
+      }
 
-    this.layersCustomisation = layersCustomisation;
+      this.layersCustomisation = parameters.layersCustomisation;
 
-    if (featureCollection) {
-      this.referencePoints = featureCollection.features
-        .filter((feature) => feature.geometry.type === "Point")
-        .sort((a, b) => {
-          if (a.properties!.index > b.properties!.index) {
-            return 1;
-          } else if (a.properties!.index < b.properties!.index) {
-            return -1;
-          }
-          return 0;
-        }) as Feature<Point>[];
-      this.linesBetweenReferencePoints = featureCollection.features
-        .filter((feature) => feature.geometry.type === "LineString")
-        .sort((a, b) => {
-          if (a.properties!.index > b.properties!.index) {
-            return 1;
-          } else if (a.properties!.index < b.properties!.index) {
-            return -1;
-          }
-          return 0;
-        }) as Feature<LineString>[];
+      if (parameters.featureCollection) {
+        this.referencePoints = parameters.featureCollection.features
+          .filter((feature) => feature.geometry.type === "Point")
+          .sort((a, b) => {
+            if (a.properties!.index > b.properties!.index) {
+              return 1;
+            } else if (a.properties!.index < b.properties!.index) {
+              return -1;
+            }
+            return 0;
+          }) as Feature<Point>[];
+        this.linesBetweenReferencePoints = parameters.featureCollection.features
+          .filter((feature) => feature.geometry.type === "LineString")
+          .sort((a, b) => {
+            if (a.properties!.index > b.properties!.index) {
+              return 1;
+            } else if (a.properties!.index < b.properties!.index) {
+              return -1;
+            }
+            return 0;
+          }) as Feature<LineString>[];
+      }
     }
   }
 
   private connect(): void {
-    this.map!.off('load', this.connect);
+    this.map!.off("load", this.connect);
     this.configureMap();
   }
 
@@ -124,7 +131,7 @@ export default class MapboxPathControl implements IControl {
 
   public onRemove(): void {
     // Stop connect attempt in the event that control is removed before map is loaded
-    this.map!.off('load', this.connect);
+    this.map!.off("load", this.connect);
     this.pathControl?.remove();
   }
 

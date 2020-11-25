@@ -6520,7 +6520,7 @@ const languages = {
 };
 
 class MapboxPathControl {
-    constructor(languageId, layersCustomisation, featureCollection, directionsThemes) {
+    constructor(parameters) {
         this.languageId = "en";
         this.referencePoints = [];
         this.linesBetweenReferencePoints = [];
@@ -6530,41 +6530,44 @@ class MapboxPathControl {
         this.changeDirectionsModeOnNextLineWithDebounce = lodash_debounce(this.changeDirectionsModeOnLine, 500, { maxWait: 1000 });
         this.actionsPanel = new Popup();
         this.directionsIsActive = false;
-        if (languageId) {
-            this.languageId = languageId;
-        }
-        if (directionsThemes && directionsThemes.length > 0) {
-            this.directionsThemes = directionsThemes;
-            this.selectedDirectionsTheme = directionsThemes[0];
-        }
-        this.layersCustomisation = layersCustomisation;
-        if (featureCollection) {
-            this.referencePoints = featureCollection.features
-                .filter((feature) => feature.geometry.type === "Point")
-                .sort((a, b) => {
-                if (a.properties.index > b.properties.index) {
-                    return 1;
-                }
-                else if (a.properties.index < b.properties.index) {
-                    return -1;
-                }
-                return 0;
-            });
-            this.linesBetweenReferencePoints = featureCollection.features
-                .filter((feature) => feature.geometry.type === "LineString")
-                .sort((a, b) => {
-                if (a.properties.index > b.properties.index) {
-                    return 1;
-                }
-                else if (a.properties.index < b.properties.index) {
-                    return -1;
-                }
-                return 0;
-            });
+        if (parameters) {
+            if (parameters.languageId) {
+                this.languageId = parameters.languageId;
+            }
+            if (parameters.directionsThemes &&
+                parameters.directionsThemes.length > 0) {
+                this.directionsThemes = parameters.directionsThemes;
+                this.selectedDirectionsTheme = parameters.directionsThemes[0];
+            }
+            this.layersCustomisation = parameters.layersCustomisation;
+            if (parameters.featureCollection) {
+                this.referencePoints = parameters.featureCollection.features
+                    .filter((feature) => feature.geometry.type === "Point")
+                    .sort((a, b) => {
+                    if (a.properties.index > b.properties.index) {
+                        return 1;
+                    }
+                    else if (a.properties.index < b.properties.index) {
+                        return -1;
+                    }
+                    return 0;
+                });
+                this.linesBetweenReferencePoints = parameters.featureCollection.features
+                    .filter((feature) => feature.geometry.type === "LineString")
+                    .sort((a, b) => {
+                    if (a.properties.index > b.properties.index) {
+                        return 1;
+                    }
+                    else if (a.properties.index < b.properties.index) {
+                        return -1;
+                    }
+                    return 0;
+                });
+            }
         }
     }
     connect() {
-        this.map.off('load', this.connect);
+        this.map.off("load", this.connect);
         this.configureMap();
     }
     onAdd(currentMap) {
@@ -6581,7 +6584,7 @@ class MapboxPathControl {
     onRemove() {
         var _a;
         // Stop connect attempt in the event that control is removed before map is loaded
-        this.map.off('load', this.connect);
+        this.map.off("load", this.connect);
         (_a = this.pathControl) === null || _a === void 0 ? void 0 : _a.remove();
     }
     createUI() {

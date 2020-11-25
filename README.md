@@ -8,14 +8,26 @@ Working example is available at rollup.config.dev.js, look at development part
 
 ```
 const map = new mapboxgl.Map({...});
-const mapboxPathControl = new MapboxPathControl(languageId, layersCustomisation, featureCollection, directionsThemes);
+const mapboxPathControl = new MapboxPathControl(parameters);
 map.addControl(mapboxPathControl);
 const featureCollection = mapboxPathControl.getFeatureCollection();
 ```
 
 ### PARAMETERS
 
+- parameters
+
+```
+{
+  languageId: AvailableLanguages | undefined;
+  layersCustomisation: LayersCustomisation | undefined;
+  featureCollection: GeoJSON.FeatureCollection<GeoJSON.Geometry> | undefined;
+  directionsThemes: DirectionsTheme[] | undefined;
+}
+```
+
 - languageId - string | undefined - default is 'en', availables languages are 'en' | 'fr'
+
 - layersCustomisation - LayersCustomisation | undefined
 
 ```
