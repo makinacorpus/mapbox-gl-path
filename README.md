@@ -2,6 +2,12 @@
 
 Create path with or without help of various directions API
 
+## GETTING STARTED
+
+```
+npm install @makina-corpus/mapbox-gl-path
+```
+
 ## DOCUMENTATION
 
 Working example is available at rollup.config.dev.js, look at development part
