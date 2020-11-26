@@ -584,6 +584,11 @@ export default class MapboxPathControl implements IControl {
       }
     }
 
+    this.map!.fire("MapboxPathControl.create", {
+      featureCollection: this.getFeatureCollection(),
+      createdPoint: referencePoint,
+    });
+
     this.updateSource();
   }
 
@@ -627,6 +632,11 @@ export default class MapboxPathControl implements IControl {
           : undefined
       );
 
+      this.map!.fire("MapboxPathControl.create", {
+        featureCollection: this.getFeatureCollection(),
+        createdPoint: currentPoint,
+      });
+
       this.updateSource();
       this.actionsPanel.remove();
     }
@@ -663,6 +673,9 @@ export default class MapboxPathControl implements IControl {
   }
 
   private async deletePoint(): Promise<void> {
+    this.map!.fire("MapboxPathControl.delete", {
+      deletedPoint: this.referencePoints[this.selectedReferencePointIndex!],
+    });
     const previousLine = this.linesBetweenReferencePoints[
       this.selectedReferencePointIndex! - 1
     ];
@@ -766,14 +779,10 @@ export default class MapboxPathControl implements IControl {
   }
 
   private updateSource(): void {
-    const data: GeoJSON.FeatureCollection<GeoJSON.Geometry> = {
-      type: "FeatureCollection",
-      features: [
-        ...this.referencePoints,
-        ...this.linesBetweenReferencePoints,
-        ...this.dashedLines,
-      ],
-    };
+    const data = this.getFeatureCollection();
+    this.map!.fire("MapboxPathControl.update", {
+      featureCollection: data,
+    });
     (this.map!.getSource(sourcePointAndLineId) as GeoJSONSource).setData(data);
   }
 
