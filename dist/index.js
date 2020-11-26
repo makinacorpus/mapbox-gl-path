@@ -6887,6 +6887,10 @@ class MapboxPathControl {
                 this.linesBetweenReferencePoints.push(nextLineBetweenReferencePoint);
             }
         }
+        this.map.fire("MapboxPathControl.create", {
+            featureCollection: this.getFeatureCollection(),
+            createdPoint: referencePoint,
+        });
         this.updateSource();
     }
     createNewPointOnLine(event) {
@@ -6913,6 +6917,10 @@ class MapboxPathControl {
                     : line, undefined, undefined, this.directionsIsActive
                     ? line.waypoints
                     : undefined);
+                this.map.fire("MapboxPathControl.create", {
+                    featureCollection: this.getFeatureCollection(),
+                    createdPoint: currentPoint,
+                });
                 this.updateSource();
                 this.actionsPanel.remove();
             }
@@ -6936,6 +6944,9 @@ class MapboxPathControl {
     }
     deletePoint() {
         return __awaiter(this, void 0, void 0, function* () {
+            this.map.fire("MapboxPathControl.delete", {
+                deletedPoint: this.referencePoints[this.selectedReferencePointIndex],
+            });
             const previousLine = this.linesBetweenReferencePoints[this.selectedReferencePointIndex - 1];
             const nextLine = this.linesBetweenReferencePoints[this.selectedReferencePointIndex];
             if (this.selectedReferencePointIndex === 0) {
@@ -6994,14 +7005,10 @@ class MapboxPathControl {
         });
     }
     updateSource() {
-        const data = {
-            type: "FeatureCollection",
-            features: [
-                ...this.referencePoints,
-                ...this.linesBetweenReferencePoints,
-                ...this.dashedLines,
-            ],
-        };
+        const data = this.getFeatureCollection();
+        this.map.fire("MapboxPathControl.update", {
+            featureCollection: data,
+        });
         this.map.getSource(sourcePointAndLineId).setData(data);
     }
     syncIndex() {
