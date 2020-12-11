@@ -7084,6 +7084,12 @@ class MapboxPathControl {
             ],
         };
     }
+    clearFeatureCollection() {
+        this.referencePoints = [];
+        this.linesBetweenReferencePoints = [];
+        this.dashedLines = [];
+        this.updateSource();
+    }
     addDashedLines(index, departure, arrival) {
         const dashedLines = [
             {
