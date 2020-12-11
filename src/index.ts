@@ -97,26 +97,7 @@ export default class MapboxPathControl implements IControl {
       this.layersCustomisation = parameters.layersCustomisation;
 
       if (parameters.featureCollection) {
-        this.referencePoints = parameters.featureCollection.features
-          .filter((feature) => feature.geometry.type === "Point")
-          .sort((a, b) => {
-            if (a.properties!.index > b.properties!.index) {
-              return 1;
-            } else if (a.properties!.index < b.properties!.index) {
-              return -1;
-            }
-            return 0;
-          }) as Feature<Point>[];
-        this.linesBetweenReferencePoints = parameters.featureCollection.features
-          .filter((feature) => feature.geometry.type === "LineString")
-          .sort((a, b) => {
-            if (a.properties!.index > b.properties!.index) {
-              return 1;
-            } else if (a.properties!.index < b.properties!.index) {
-              return -1;
-            }
-            return 0;
-          }) as Feature<LineString>[];
+        this.setFeatureCollection(parameters.featureCollection);
       }
     }
   }
@@ -898,6 +879,24 @@ export default class MapboxPathControl implements IControl {
       this.updateSource();
       this.actionsPanel.remove();
     }
+  }
+  public setFeatureCollection({
+    features,
+  }: GeoJSON.FeatureCollection<GeoJSON.Geometry>): void {
+    this.referencePoints = features
+      .filter((feature) => feature.geometry.type === "Point")
+      .sort((a, b) => a.properties!.index - b.properties!.index) as Feature<
+      Point
+    >[];
+
+    this.linesBetweenReferencePoints = features
+      .filter((feature) => feature.geometry.type === "LineString")
+      .sort((a, b) => a.properties!.index - b.properties!.index) as Feature<
+      LineString
+    >[];
+
+    this.syncIndex();
+    this.updateSource();
   }
 
   public getFeatureCollection(): GeoJSON.FeatureCollection<GeoJSON.Geometry> {
