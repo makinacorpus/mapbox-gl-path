@@ -14,6 +14,8 @@ import {
   betweenPointsLineLayer,
   dashedLineLayer,
   LayersCustomisation,
+  pointTextLayerId,
+  dashedLineLayerId,
 } from "./source-and-layers";
 import { languages, AvailableLanguages } from "./i18n";
 import "./mapbox-gl-path.css";
@@ -53,6 +55,15 @@ export default class MapboxPathControl implements IControl {
   private dashedLines: Feature<LineString>[] = [];
   private onMovePointFunction = (event: MapMouseEvent) =>
     this.onMovePoint(event);
+
+  private onClickMapFunction = (event: MapMouseEvent) => this.onClickMap(event);
+
+  private onContextMenuMapFunction = (event: MapMouseEvent) =>
+    this.onContextMenuMap(event);
+
+  private onMouseDownPointFunction = (event: MapMouseEvent) =>
+    this.onMouseDownPoint(event);
+
   private changeDirectionsModeOnPreviousLineWithDebounce = debounce(
     this.changeDirectionsModeOnLine,
     500,
@@ -119,6 +130,21 @@ export default class MapboxPathControl implements IControl {
   }
 
   public onRemove(): void {
+    this.removeEvents();
+    [
+      pointCircleLayerId,
+      pointTextLayerId,
+      betweenPointsLineLayerId,
+      dashedLineLayerId,
+    ].forEach((layer) => {
+      if (this.map!.getLayer(layer)) {
+        this.map!.removeLayer(layer);
+      }
+    });
+    if (this.map!.getSource(sourcePointAndLineId)) {
+      this.map!.removeSource(sourcePointAndLineId);
+    }
+
     this.pathControl?.remove();
   }
 
@@ -219,10 +245,12 @@ export default class MapboxPathControl implements IControl {
   }
 
   private initializeEvents(): void {
-    this.map!.on("click", (event) => this.onClickMap(event));
-    this.map!.on("contextmenu", (event) => this.onContextMenuMap(event));
-    this.map!.on("mousedown", pointCircleLayerId, (event) =>
-      this.onMouseDownPoint(event)
+    this.map!.on("click", this.onClickMapFunction);
+    this.map!.on("contextmenu", this.onContextMenuMapFunction);
+    this.map!.on(
+      "mousedown",
+      pointCircleLayerId,
+      this.onMouseDownPointFunction
     );
 
     this.map!.on("mouseenter", pointCircleLayerId, () =>
@@ -236,6 +264,17 @@ export default class MapboxPathControl implements IControl {
     );
     this.map!.on("mouseleave", betweenPointsLineLayerId, () =>
       this.handleMapCursor("")
+    );
+  }
+
+  private removeEvents(): void {
+    this.map!.off("click", this.onClickMapFunction);
+    this.map!.off("contextmenu", this.onContextMenuMapFunction);
+    this.map!.off("mousemove", this.onMovePointFunction);
+    this.map!.off(
+      "mousedown",
+      pointCircleLayerId,
+      this.onMouseDownPointFunction
     );
   }
 

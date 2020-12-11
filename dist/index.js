@@ -6526,6 +6526,9 @@ class MapboxPathControl {
         this.linesBetweenReferencePoints = [];
         this.dashedLines = [];
         this.onMovePointFunction = (event) => this.onMovePoint(event);
+        this.onClickMapFunction = (event) => this.onClickMap(event);
+        this.onContextMenuMapFunction = (event) => this.onContextMenuMap(event);
+        this.onMouseDownPointFunction = (event) => this.onMouseDownPoint(event);
         this.changeDirectionsModeOnPreviousLineWithDebounce = lodash_debounce(this.changeDirectionsModeOnLine, 500, { maxWait: 1000 });
         this.changeDirectionsModeOnNextLineWithDebounce = lodash_debounce(this.changeDirectionsModeOnLine, 500, { maxWait: 1000 });
         this.actionsPanel = new Popup();
@@ -6574,6 +6577,20 @@ class MapboxPathControl {
     }
     onRemove() {
         var _a;
+        this.removeEvents();
+        [
+            pointCircleLayerId,
+            pointTextLayerId,
+            betweenPointsLineLayerId,
+            dashedLineLayerId,
+        ].forEach((layer) => {
+            if (this.map.getLayer(layer)) {
+                this.map.removeLayer(layer);
+            }
+        });
+        if (this.map.getSource(sourcePointAndLineId)) {
+            this.map.removeSource(sourcePointAndLineId);
+        }
         (_a = this.pathControl) === null || _a === void 0 ? void 0 : _a.remove();
     }
     createUI() {
@@ -6629,13 +6646,19 @@ class MapboxPathControl {
             ? Object.assign(Object.assign({}, dashedLineLayer), this.layersCustomisation.dashedLineLayerCustomisation) : dashedLineLayer, pointCircleLayerId);
     }
     initializeEvents() {
-        this.map.on("click", (event) => this.onClickMap(event));
-        this.map.on("contextmenu", (event) => this.onContextMenuMap(event));
-        this.map.on("mousedown", pointCircleLayerId, (event) => this.onMouseDownPoint(event));
+        this.map.on("click", this.onClickMapFunction);
+        this.map.on("contextmenu", this.onContextMenuMapFunction);
+        this.map.on("mousedown", pointCircleLayerId, this.onMouseDownPointFunction);
         this.map.on("mouseenter", pointCircleLayerId, () => this.handleMapCursor("pointer"));
         this.map.on("mouseleave", pointCircleLayerId, () => this.handleMapCursor(""));
         this.map.on("mouseenter", betweenPointsLineLayerId, () => this.handleMapCursor("pointer"));
         this.map.on("mouseleave", betweenPointsLineLayerId, () => this.handleMapCursor(""));
+    }
+    removeEvents() {
+        this.map.off("click", this.onClickMapFunction);
+        this.map.off("contextmenu", this.onContextMenuMapFunction);
+        this.map.off("mousemove", this.onMovePointFunction);
+        this.map.off("mousedown", pointCircleLayerId, this.onMouseDownPointFunction);
     }
     handleMapCursor(cursor) {
         this.map.getCanvas().style.cursor = cursor;
