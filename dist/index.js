@@ -7018,10 +7018,21 @@ class MapboxPathControl {
     }
     updateSource() {
         const data = this.getFeatureCollection();
-        this.map.fire("MapboxPathControl.update", {
-            featureCollection: data,
-        });
-        this.map.getSource(sourcePointAndLineId).setData(data);
+        const isSourceLoaded = () => this.map.getSource(sourcePointAndLineId) &&
+            this.map.isSourceLoaded(sourcePointAndLineId);
+        const setData = () => {
+            if (isSourceLoaded()) {
+                this.map.getSource(sourcePointAndLineId).setData(data);
+                this.map.fire("MapboxPathControl.update", { featureCollection: data });
+                this.map.off("sourcedata", setData);
+            }
+        };
+        if (isSourceLoaded()) {
+            setData();
+        }
+        else {
+            this.map.on("sourcedata", setData);
+        }
     }
     syncIndex() {
         this.referencePoints.forEach((point, index) => (point.properties.index = index));

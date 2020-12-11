@@ -806,12 +806,26 @@ export default class MapboxPathControl implements IControl {
 
   private updateSource(): void {
     const data = this.getFeatureCollection();
-    this.map!.fire("MapboxPathControl.update", {
-      featureCollection: data,
-    });
-    (this.map!.getSource(sourcePointAndLineId) as GeoJSONSource).setData(data);
-  }
+    const isSourceLoaded = () =>
+      this.map!.getSource(sourcePointAndLineId) &&
+      this.map!.isSourceLoaded(sourcePointAndLineId);
 
+    const setData = () => {
+      if (isSourceLoaded()) {
+        (this.map!.getSource(sourcePointAndLineId) as GeoJSONSource).setData(
+          data
+        );
+        this.map!.fire("MapboxPathControl.update", { featureCollection: data });
+        this.map!.off("sourcedata", setData);
+      }
+    };
+
+    if (isSourceLoaded()) {
+      setData();
+    } else {
+      this.map!.on("sourcedata", setData);
+    }
+  }
   private syncIndex(): void {
     this.referencePoints.forEach(
       (point, index) => (point.properties!.index = index)
