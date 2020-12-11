@@ -6544,28 +6544,7 @@ class MapboxPathControl {
             }
             this.layersCustomisation = parameters.layersCustomisation;
             if (parameters.featureCollection) {
-                this.referencePoints = parameters.featureCollection.features
-                    .filter((feature) => feature.geometry.type === "Point")
-                    .sort((a, b) => {
-                    if (a.properties.index > b.properties.index) {
-                        return 1;
-                    }
-                    else if (a.properties.index < b.properties.index) {
-                        return -1;
-                    }
-                    return 0;
-                });
-                this.linesBetweenReferencePoints = parameters.featureCollection.features
-                    .filter((feature) => feature.geometry.type === "LineString")
-                    .sort((a, b) => {
-                    if (a.properties.index > b.properties.index) {
-                        return 1;
-                    }
-                    else if (a.properties.index < b.properties.index) {
-                        return -1;
-                    }
-                    return 0;
-                });
+                this.setFeatureCollection(parameters.featureCollection);
             }
         }
     }
@@ -7084,6 +7063,16 @@ class MapboxPathControl {
                 this.actionsPanel.remove();
             }
         });
+    }
+    setFeatureCollection({ features, }) {
+        this.referencePoints = features
+            .filter((feature) => feature.geometry.type === "Point")
+            .sort((a, b) => a.properties.index - b.properties.index);
+        this.linesBetweenReferencePoints = features
+            .filter((feature) => feature.geometry.type === "LineString")
+            .sort((a, b) => a.properties.index - b.properties.index);
+        this.syncIndex();
+        this.updateSource();
     }
     getFeatureCollection() {
         return {
