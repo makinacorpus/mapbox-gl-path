@@ -6566,25 +6566,14 @@ class MapboxPathControl {
             }
         }
     }
-    connect() {
-        this.map.off("load", this.connect);
-        this.configureMap();
-    }
     onAdd(currentMap) {
         this.map = currentMap;
         this.pathControl = this.createUI();
-        if (this.map.loaded()) {
-            this.connect();
-        }
-        else {
-            this.map.on("load", () => this.connect());
-        }
+        this.map.once("idle", () => this.configureMap());
         return this.pathControl;
     }
     onRemove() {
         var _a;
-        // Stop connect attempt in the event that control is removed before map is loaded
-        this.map.off("load", this.connect);
         (_a = this.pathControl) === null || _a === void 0 ? void 0 : _a.remove();
     }
     createUI() {
