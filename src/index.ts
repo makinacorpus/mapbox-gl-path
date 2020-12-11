@@ -910,6 +910,13 @@ export default class MapboxPathControl implements IControl {
     };
   }
 
+  public clearFeatureCollection(): void {
+    this.referencePoints = [];
+    this.linesBetweenReferencePoints = [];
+    this.dashedLines = [];
+    this.updateSource();
+  }
+
   private addDashedLines(
     index: number,
     departure: number[][],
