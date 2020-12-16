@@ -108,9 +108,17 @@ getPathByCoordinates function return a object of type DirectionsThemeResponse wi
 
 ### METHODS
 
+#### clearFeatureCollection
+
 #### getFeatureCollection
 
-return GeoJSON.FeatureCollection<GeoJSON.Geometry>
+return `GeoJSON.FeatureCollection<GeoJSON.Geometry>`
+
+#### setFeatureCollection
+
+##### Parameter
+
+featureCollection - `GeoJSON.FeatureCollection<GeoJSON.Geometry>`
 
 ## DEVELOPMENT
 
