@@ -4,7 +4,7 @@ export const sourcePointAndLineId = "points-and-lines";
 export const pointCircleLayerId = "reference-points-circle";
 export const pointTextLayerId = "reference-points-text";
 export const betweenPointsLineLayerId = "between-points-lines";
-export const dashedLineLayerId = "dashed-lines";
+export const phantomJunctionLineLayerId = "phantom-junction-lines";
 
 export const pointsAndLinesSource: GeoJSONSourceRaw = {
   type: "geojson",
@@ -36,11 +36,11 @@ export const betweenPointsLineLayer: Layer = {
   type: "line",
   source: sourcePointAndLineId,
   paint: { "line-width": 10, "line-color": "#000000" },
-  filter: ["all", ["in", "$type", "LineString"], ["!has", "isDashed"]],
+  filter: ["all", ["in", "$type", "LineString"], ["!has", "isPhantomJunction"]],
 };
 
-export const dashedLineLayer: Layer = {
-  id: dashedLineLayerId,
+export const phantomJunctionLineLayer: Layer = {
+  id: phantomJunctionLineLayerId,
   type: "line",
   source: sourcePointAndLineId,
   paint: {
@@ -48,14 +48,14 @@ export const dashedLineLayer: Layer = {
     "line-color": "#000000",
     "line-dasharray": [1, 1],
   },
-  filter: ["all", ["in", "$type", "LineString"], ["has", "isDashed"]],
+  filter: ["all", ["in", "$type", "LineString"], ["has", "isPhantomJunction"]],
 };
 
 export interface LayersCustomisation {
   pointCircleLayerCustomisation: LayerCustomisation;
   pointTextLayerCustomisation: LayerCustomisation;
   lineLayerCustomisation: LayerCustomisation;
-  dashedLineLayerCustomisation: LayerCustomisation;
+  phantomJunctionLineLayerCustomisation: LayerCustomisation;
 }
 
 export interface LayerCustomisation {

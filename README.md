@@ -41,7 +41,7 @@ LayersCustomisation {
   pointCircleLayerCustomisation: LayerCustomisation;
   pointTextLayerCustomisation: LayerCustomisation;
   lineLayerCustomisation: LayerCustomisation;
-  dashedLineLayerCustomisation: LayerCustomisation;
+  phantomJunctionLineLayerCustomisation: LayerCustomisation;
 }
 
 LayerCustomisation {
@@ -53,7 +53,7 @@ LayerCustomisation {
 - featureCollection - GeoJSON.FeatureCollection<GeoJSON.Geometry> | undefined
 
 A feature can be type of Point or Linestring\
-Linestring can be a line between points or a dashed line
+Linestring can be a line between points or a phantom junction line
 
 Point
 
@@ -72,12 +72,12 @@ properties {
 }
 ```
 
-Dashed line
+phantomJunction line
 
 ```
 properties {
   index: number
-  isDashed: boolean
+  isPhantomJunction: boolean
   isDeparture: boolean
 }
 ```
@@ -104,7 +104,7 @@ Waypoints {
 }
 ```
 
-getPathByCoordinates function return a object of type DirectionsThemeResponse with the coordinates between two points and waypoints, if necessary, to create dashed lines between waypoints and points
+getPathByCoordinates function return a object of type DirectionsThemeResponse with the coordinates between two points and waypoints, if necessary, to create phantomJunction lines between waypoints and points
 
 ### METHODS
 

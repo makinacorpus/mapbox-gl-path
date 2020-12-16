@@ -6458,7 +6458,7 @@ const sourcePointAndLineId = "points-and-lines";
 const pointCircleLayerId = "reference-points-circle";
 const pointTextLayerId = "reference-points-text";
 const betweenPointsLineLayerId = "between-points-lines";
-const dashedLineLayerId = "dashed-lines";
+const phantomJunctionLineLayerId = "phantom-junction-lines";
 const pointsAndLinesSource = {
     type: "geojson",
     data: { type: "FeatureCollection", features: [] },
@@ -6486,10 +6486,10 @@ const betweenPointsLineLayer = {
     type: "line",
     source: sourcePointAndLineId,
     paint: { "line-width": 10, "line-color": "#000000" },
-    filter: ["all", ["in", "$type", "LineString"], ["!has", "isDashed"]],
+    filter: ["all", ["in", "$type", "LineString"], ["!has", "isPhantomJunction"]],
 };
-const dashedLineLayer = {
-    id: dashedLineLayerId,
+const phantomJunctionLineLayer = {
+    id: phantomJunctionLineLayerId,
     type: "line",
     source: sourcePointAndLineId,
     paint: {
@@ -6497,7 +6497,7 @@ const dashedLineLayer = {
         "line-color": "#000000",
         "line-dasharray": [1, 1],
     },
-    filter: ["all", ["in", "$type", "LineString"], ["has", "isDashed"]],
+    filter: ["all", ["in", "$type", "LineString"], ["has", "isPhantomJunction"]],
 };
 
 const languages = {
@@ -6524,7 +6524,7 @@ class MapboxPathControl {
         this.languageId = "en";
         this.referencePoints = [];
         this.linesBetweenReferencePoints = [];
-        this.dashedLines = [];
+        this.phantomJunctionLines = [];
         this.onMovePointFunction = (event) => this.onMovePoint(event);
         this.onClickMapFunction = (event) => this.onClickMap(event);
         this.onContextMenuMapFunction = (event) => this.onContextMenuMap(event);
@@ -6561,7 +6561,7 @@ class MapboxPathControl {
             pointCircleLayerId,
             pointTextLayerId,
             betweenPointsLineLayerId,
-            dashedLineLayerId,
+            phantomJunctionLineLayerId,
         ].forEach((layer) => {
             if (this.map.getLayer(layer)) {
                 this.map.removeLayer(layer);
@@ -6621,8 +6621,8 @@ class MapboxPathControl {
             this.layersCustomisation.lineLayerCustomisation
             ? Object.assign(Object.assign({}, betweenPointsLineLayer), this.layersCustomisation.lineLayerCustomisation) : betweenPointsLineLayer, pointCircleLayerId);
         this.map.addLayer(this.layersCustomisation &&
-            this.layersCustomisation.dashedLineLayerCustomisation
-            ? Object.assign(Object.assign({}, dashedLineLayer), this.layersCustomisation.dashedLineLayerCustomisation) : dashedLineLayer, pointCircleLayerId);
+            this.layersCustomisation.phantomJunctionLineLayerCustomisation
+            ? Object.assign(Object.assign({}, phantomJunctionLineLayer), this.layersCustomisation.phantomJunctionLineLayerCustomisation) : phantomJunctionLineLayer, pointCircleLayerId);
     }
     initializeEvents() {
         this.map.on("click", this.onClickMapFunction);
@@ -6841,7 +6841,7 @@ class MapboxPathControl {
                 },
             };
             if (waypoints) {
-                this.addDashedLines(this.linesBetweenReferencePoints.length, [
+                this.addPhantomJunctionLines(this.linesBetweenReferencePoints.length, [
                     this.referencePoints[this.referencePoints.length - 2].geometry
                         .coordinates,
                     waypoints.departure,
@@ -6866,10 +6866,10 @@ class MapboxPathControl {
                     directionsIsActive,
                 },
             };
-            const dashedLine = this.dashedLines.find((dashedLine) => dashedLine.properties.index === currentLineIndex &&
-                dashedLine.properties.isDeparture === false);
-            if (dashedLine) {
-                dashedLine.properties.index = currentLineIndex + 1;
+            const phantomJunctionLine = this.phantomJunctionLines.find((phantomJunctionLine) => phantomJunctionLine.properties.index === currentLineIndex &&
+                phantomJunctionLine.properties.isDeparture === false);
+            if (phantomJunctionLine) {
+                phantomJunctionLine.properties.index = currentLineIndex + 1;
             }
             if (currentLineIndex !== undefined) {
                 this.linesBetweenReferencePoints.splice(currentLineIndex + 1, 0, nextLineBetweenReferencePoint);
@@ -6944,7 +6944,7 @@ class MapboxPathControl {
                 this.referencePoints.shift();
                 if (this.referencePoints.length > 0) {
                     this.linesBetweenReferencePoints.shift();
-                    this.dashedLines = this.dashedLines.filter((dashedLine) => dashedLine.properties.index !== nextLine.properties.index);
+                    this.phantomJunctionLines = this.phantomJunctionLines.filter((phantomJunctionLine) => phantomJunctionLine.properties.index !== nextLine.properties.index);
                 }
                 this.syncIndex();
             }
@@ -6953,13 +6953,15 @@ class MapboxPathControl {
                 this.referencePoints.splice(this.selectedReferencePointIndex, 1);
                 this.linesBetweenReferencePoints.splice(previousLine.properties.index, 1);
                 this.syncIndex();
-                this.dashedLines = this.dashedLines.filter((dashedLine) => dashedLine.properties.index !== previousLine.properties.index);
+                this.phantomJunctionLines = this.phantomJunctionLines.filter((phantomJunctionLine) => phantomJunctionLine.properties.index !==
+                    previousLine.properties.index);
             }
             else {
                 const previousPoint = this.referencePoints[this.selectedReferencePointIndex - 1];
                 const nextPoint = this.referencePoints[this.selectedReferencePointIndex + 1];
-                this.dashedLines = this.dashedLines.filter((dashedLine) => dashedLine.properties.index !== previousLine.properties.index &&
-                    dashedLine.properties.index !== nextLine.properties.index);
+                this.phantomJunctionLines = this.phantomJunctionLines.filter((phantomJunctionLine) => phantomJunctionLine.properties.index !==
+                    previousLine.properties.index &&
+                    phantomJunctionLine.properties.index !== nextLine.properties.index);
                 if (!previousLine.properties.directionsIsActive ||
                     !nextLine.properties.directionsIsActive) {
                     const lineBetweenReferencePoint = this.linesBetweenReferencePoints[previousLine.properties.index];
@@ -6978,7 +6980,7 @@ class MapboxPathControl {
                                 nextPoint.geometry.coordinates,
                             ];
                     if (directionsResponse === null || directionsResponse === void 0 ? void 0 : directionsResponse.waypoints) {
-                        this.addDashedLines(previousLine.properties.index, [
+                        this.addPhantomJunctionLines(previousLine.properties.index, [
                             previousPoint.geometry.coordinates,
                             directionsResponse.waypoints.departure,
                         ], [
@@ -7017,9 +7019,9 @@ class MapboxPathControl {
         this.referencePoints.forEach((point, index) => (point.properties.index = index));
         this.linesBetweenReferencePoints.forEach((line, index) => {
             if (line.properties.index !== index) {
-                this.dashedLines.forEach((dashedLine) => {
-                    if (dashedLine.properties.index === line.properties.index) {
-                        dashedLine.properties.index = index;
+                this.phantomJunctionLines.forEach((phantomJunctionLine) => {
+                    if (phantomJunctionLine.properties.index === line.properties.index) {
+                        phantomJunctionLine.properties.index = index;
                     }
                 });
             }
@@ -7036,15 +7038,15 @@ class MapboxPathControl {
                     previousPoint.geometry.coordinates,
                     nextPoint.geometry.coordinates,
                 ];
-                this.dashedLines = this.dashedLines.filter((dashedLine) => dashedLine.properties.index !== line.properties.index);
+                this.phantomJunctionLines = this.phantomJunctionLines.filter((phantomJunctionLine) => phantomJunctionLine.properties.index !== line.properties.index);
             }
             else {
                 const directionsResponse = yield this.selectedDirectionsTheme.getPathByCoordinates([previousPoint.geometry.coordinates, nextPoint.geometry.coordinates]);
                 if (directionsResponse && directionsResponse.coordinates) {
                     coordinates = directionsResponse.coordinates;
-                    this.dashedLines = this.dashedLines.filter((dashedLine) => dashedLine.properties.index !== line.properties.index);
+                    this.phantomJunctionLines = this.phantomJunctionLines.filter((phantomJunctionLine) => phantomJunctionLine.properties.index !== line.properties.index);
                     if (directionsResponse === null || directionsResponse === void 0 ? void 0 : directionsResponse.waypoints) {
-                        this.addDashedLines(line.properties.index, [
+                        this.addPhantomJunctionLines(line.properties.index, [
                             previousPoint.geometry.coordinates,
                             directionsResponse.waypoints.departure,
                         ], [
@@ -7080,18 +7082,18 @@ class MapboxPathControl {
             features: [
                 ...this.referencePoints,
                 ...this.linesBetweenReferencePoints,
-                ...this.dashedLines,
+                ...this.phantomJunctionLines,
             ],
         };
     }
     clearFeatureCollection() {
         this.referencePoints = [];
         this.linesBetweenReferencePoints = [];
-        this.dashedLines = [];
+        this.phantomJunctionLines = [];
         this.updateSource();
     }
-    addDashedLines(index, departure, arrival) {
-        const dashedLines = [
+    addPhantomJunctionLines(index, departure, arrival) {
+        const phantomJunctionLines = [
             {
                 type: "Feature",
                 geometry: {
@@ -7100,7 +7102,7 @@ class MapboxPathControl {
                 },
                 properties: {
                     index,
-                    isDashed: true,
+                    isPhantomJunction: true,
                     isDeparture: true,
                 },
             },
@@ -7112,12 +7114,15 @@ class MapboxPathControl {
                 },
                 properties: {
                     index,
-                    isDashed: true,
+                    isPhantomJunction: true,
                     isDeparture: false,
                 },
             },
         ];
-        this.dashedLines = [...this.dashedLines, ...dashedLines];
+        this.phantomJunctionLines = [
+            ...this.phantomJunctionLines,
+            ...phantomJunctionLines,
+        ];
     }
 }
 
