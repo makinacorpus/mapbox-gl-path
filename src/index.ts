@@ -75,7 +75,7 @@ export default class MapboxPathControl implements IControl {
     { maxWait: 1000 }
   );
   private actionsPanel: Popup = new Popup();
-  private directionsIsActive = false;
+  private isFollowingDirections = false;
   private layersCustomisation: LayersCustomisation | undefined;
   private directionsThemes: DirectionsTheme[] | undefined;
   private selectedDirectionsTheme: DirectionsTheme | undefined;
@@ -140,7 +140,7 @@ export default class MapboxPathControl implements IControl {
       pathControlCheckbox.addEventListener(
         "change",
         (event) =>
-          (this.directionsIsActive = (event.target as HTMLInputElement).checked)
+          (this.isFollowingDirections = (event.target as HTMLInputElement).checked)
       );
       const pathControlSelect = document.createElement("select");
       pathControlSelect.onchange = (event) => {
@@ -283,7 +283,7 @@ export default class MapboxPathControl implements IControl {
           : null;
 
       if (previousReferencePoint) {
-        const line = this.directionsIsActive
+        const line = this.isFollowingDirections
           ? await this.selectedDirectionsTheme!.getPathByCoordinates([
               previousReferencePoint.geometry.coordinates,
               newPointCoordinates,
@@ -292,13 +292,13 @@ export default class MapboxPathControl implements IControl {
         if (line) {
           this.createNewPointAndLine(
             newPointCoordinates,
-            this.directionsIsActive,
-            this.directionsIsActive
+            this.isFollowingDirections,
+            this.isFollowingDirections
               ? (line as DirectionsThemeResponse).coordinates
               : (line as number[][]),
             undefined,
             undefined,
-            this.directionsIsActive
+            this.isFollowingDirections
               ? (line as DirectionsThemeResponse).waypoints
               : undefined
           );
@@ -367,7 +367,7 @@ export default class MapboxPathControl implements IControl {
     }) as Feature<LineString>[];
     const changePathModeOnButton = document.createElement("button");
     changePathModeOnButton.textContent = lineUnderMouse[0].properties!
-      .directionsIsActive
+      .isFollowingDirections
       ? languages[this.languageId].enableFollowDirectionMode
       : languages[this.languageId].disableFollowDirectionMode;
     changePathModeOnButton.setAttribute("type", "button");
@@ -382,7 +382,7 @@ export default class MapboxPathControl implements IControl {
     if (this.directionsThemes && this.directionsThemes.length > 0) {
       const changePathModeOnLineButton = document.createElement("button");
       changePathModeOnLineButton.textContent = !lineUnderMouse[0].properties!
-        .directionsIsActive
+        .isFollowingDirections
         ? languages[this.languageId].enableFollowDirectionMode
         : languages[this.languageId].disableFollowDirectionMode;
       changePathModeOnLineButton.setAttribute("type", "button");
@@ -437,7 +437,7 @@ export default class MapboxPathControl implements IControl {
       this.selectedReferencePointIndex! === 0 &&
       this.referencePoints.length > 1
     ) {
-      if (nextLine && !nextLine.properties!.directionsIsActive) {
+      if (nextLine && !nextLine.properties!.isFollowingDirections) {
         this.linesBetweenReferencePoints[
           nextLine.properties!.index
         ].geometry.coordinates = [
@@ -450,7 +450,7 @@ export default class MapboxPathControl implements IControl {
       this.selectedReferencePointIndex! ===
       this.referencePoints.length - 1
     ) {
-      if (previousLine && !previousLine.properties!.directionsIsActive) {
+      if (previousLine && !previousLine.properties!.isFollowingDirections) {
         this.linesBetweenReferencePoints[
           previousLine.properties!.index
         ].geometry.coordinates = [
@@ -460,7 +460,7 @@ export default class MapboxPathControl implements IControl {
         ];
       }
     } else {
-      if (previousLine && !previousLine.properties!.directionsIsActive) {
+      if (previousLine && !previousLine.properties!.isFollowingDirections) {
         this.linesBetweenReferencePoints[
           previousLine.properties!.index
         ].geometry.coordinates = [
@@ -469,7 +469,7 @@ export default class MapboxPathControl implements IControl {
           eventCoordinates,
         ];
       }
-      if (nextLine && !nextLine.properties!.directionsIsActive) {
+      if (nextLine && !nextLine.properties!.isFollowingDirections) {
         this.linesBetweenReferencePoints[
           nextLine.properties!.index
         ].geometry.coordinates = [
@@ -480,10 +480,10 @@ export default class MapboxPathControl implements IControl {
       }
     }
 
-    if (previousLine && previousLine.properties!.directionsIsActive) {
+    if (previousLine && previousLine.properties!.isFollowingDirections) {
       this.changeDirectionsModeOnPreviousLineWithDebounce(previousLine, true);
     }
-    if (nextLine && nextLine.properties!.directionsIsActive) {
+    if (nextLine && nextLine.properties!.isFollowingDirections) {
       this.changeDirectionsModeOnNextLineWithDebounce(nextLine, true);
     }
 
@@ -497,7 +497,7 @@ export default class MapboxPathControl implements IControl {
 
   private createNewPointAndLine(
     newPointCoordinates: number[],
-    directionsIsActive?: boolean,
+    isFollowingDirections?: boolean,
     previousLineCoordinates?: number[][],
     nextLineCoordinates?: number[][],
     currentLineIndex?: number,
@@ -530,7 +530,7 @@ export default class MapboxPathControl implements IControl {
             currentLineIndex !== undefined
               ? currentLineIndex
               : this.linesBetweenReferencePoints.length,
-          directionsIsActive,
+          isFollowingDirections,
         },
       };
 
@@ -568,7 +568,7 @@ export default class MapboxPathControl implements IControl {
         },
         properties: {
           index: currentLineIndex! + 1,
-          directionsIsActive,
+          isFollowingDirections,
         },
       };
       const phantomJunctionLine = this.phantomJunctionLines.find(
@@ -616,7 +616,7 @@ export default class MapboxPathControl implements IControl {
       const previousReferencePoint = this.referencePoints[
         this.referencePoints.length - 1
       ];
-      const line = this.directionsIsActive
+      const line = this.isFollowingDirections
         ? await this.selectedDirectionsTheme!.getPathByCoordinates([
             previousReferencePoint.geometry.coordinates,
             nearestPoint.geometry.coordinates,
@@ -628,13 +628,13 @@ export default class MapboxPathControl implements IControl {
 
       this.createNewPointAndLine(
         nearestPoint.geometry.coordinates,
-        this.directionsIsActive,
-        this.directionsIsActive
+        this.isFollowingDirections,
+        this.isFollowingDirections
           ? (line as DirectionsThemeResponse).coordinates
           : (line as number[][]),
         undefined,
         undefined,
-        this.directionsIsActive
+        this.isFollowingDirections
           ? (line as DirectionsThemeResponse).waypoints
           : undefined
       );
@@ -667,7 +667,7 @@ export default class MapboxPathControl implements IControl {
       const newLines = lineSplit(currentLineString, nearestPoint);
       this.createNewPointAndLine(
         nearestPoint.geometry.coordinates,
-        lineUnderMouse[0].properties!.directionsIsActive,
+        lineUnderMouse[0].properties!.isFollowingDirections,
         newLines.features[0].geometry!.coordinates,
         newLines.features[1].geometry!.coordinates,
         lineUnderMouseIndex
@@ -729,8 +729,8 @@ export default class MapboxPathControl implements IControl {
           phantomJunctionLine.properties!.index !== nextLine.properties!.index
       );
       if (
-        !previousLine.properties!.directionsIsActive ||
-        !nextLine.properties!.directionsIsActive
+        !previousLine.properties!.isFollowingDirections ||
+        !nextLine.properties!.isFollowingDirections
       ) {
         const lineBetweenReferencePoint = this.linesBetweenReferencePoints[
           previousLine.properties!.index
@@ -746,7 +746,7 @@ export default class MapboxPathControl implements IControl {
           },
           properties: {
             ...lineBetweenReferencePoint.properties,
-            directionsIsActive: false,
+            isFollowingDirections: false,
           },
         };
       } else {
@@ -834,7 +834,7 @@ export default class MapboxPathControl implements IControl {
     let coordinates: number[][] | undefined = [];
     const previousPoint = this.referencePoints[line.properties!.index];
     const nextPoint = this.referencePoints[line.properties!.index + 1];
-    if (line.properties!.directionsIsActive && !forceDirections) {
+    if (line.properties!.isFollowingDirections && !forceDirections) {
       coordinates = [
         previousPoint.geometry.coordinates,
         nextPoint.geometry.coordinates,
@@ -877,8 +877,8 @@ export default class MapboxPathControl implements IControl {
         },
         properties: {
           ...line.properties,
-          directionsIsActive:
-            !Boolean(line.properties!.directionsIsActive) || forceDirections,
+          isFollowingDirections:
+            !Boolean(line.properties!.isFollowingDirections) || forceDirections,
         },
       });
       this.updateSource();

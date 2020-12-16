@@ -68,7 +68,7 @@ Line between points
 ```
 properties {
   index: number
-  directionsIsActive: boolean
+  isFollowingDirections: boolean
 }
 ```
 

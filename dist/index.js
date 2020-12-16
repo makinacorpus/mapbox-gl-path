@@ -6532,7 +6532,7 @@ class MapboxPathControl {
         this.changeDirectionsModeOnPreviousLineWithDebounce = lodash_debounce(this.changeDirectionsModeOnLine, 500, { maxWait: 1000 });
         this.changeDirectionsModeOnNextLineWithDebounce = lodash_debounce(this.changeDirectionsModeOnLine, 500, { maxWait: 1000 });
         this.actionsPanel = new Popup();
-        this.directionsIsActive = false;
+        this.isFollowingDirections = false;
         if (parameters) {
             if (parameters.languageId) {
                 this.languageId = parameters.languageId;
@@ -6579,7 +6579,7 @@ class MapboxPathControl {
             const pathControlCheckbox = document.createElement("input");
             pathControlCheckbox.setAttribute("id", "checkbox-path");
             pathControlCheckbox.setAttribute("type", "checkbox");
-            pathControlCheckbox.addEventListener("change", (event) => (this.directionsIsActive = event.target.checked));
+            pathControlCheckbox.addEventListener("change", (event) => (this.isFollowingDirections = event.target.checked));
             const pathControlSelect = document.createElement("select");
             pathControlSelect.onchange = (event) => {
                 var _a;
@@ -6657,16 +6657,16 @@ class MapboxPathControl {
                     ? this.referencePoints[this.referencePoints.length - 1]
                     : null;
                 if (previousReferencePoint) {
-                    const line = this.directionsIsActive
+                    const line = this.isFollowingDirections
                         ? yield this.selectedDirectionsTheme.getPathByCoordinates([
                             previousReferencePoint.geometry.coordinates,
                             newPointCoordinates,
                         ])
                         : [previousReferencePoint.geometry.coordinates, newPointCoordinates];
                     if (line) {
-                        this.createNewPointAndLine(newPointCoordinates, this.directionsIsActive, this.directionsIsActive
+                        this.createNewPointAndLine(newPointCoordinates, this.isFollowingDirections, this.isFollowingDirections
                             ? line.coordinates
-                            : line, undefined, undefined, this.directionsIsActive
+                            : line, undefined, undefined, this.isFollowingDirections
                             ? line.waypoints
                             : undefined);
                     }
@@ -6720,7 +6720,7 @@ class MapboxPathControl {
         });
         const changePathModeOnButton = document.createElement("button");
         changePathModeOnButton.textContent = lineUnderMouse[0].properties
-            .directionsIsActive
+            .isFollowingDirections
             ? languages[this.languageId].enableFollowDirectionMode
             : languages[this.languageId].disableFollowDirectionMode;
         changePathModeOnButton.setAttribute("type", "button");
@@ -6730,7 +6730,7 @@ class MapboxPathControl {
         if (this.directionsThemes && this.directionsThemes.length > 0) {
             const changePathModeOnLineButton = document.createElement("button");
             changePathModeOnLineButton.textContent = !lineUnderMouse[0].properties
-                .directionsIsActive
+                .isFollowingDirections
                 ? languages[this.languageId].enableFollowDirectionMode
                 : languages[this.languageId].disableFollowDirectionMode;
             changePathModeOnLineButton.setAttribute("type", "button");
@@ -6765,7 +6765,7 @@ class MapboxPathControl {
         this.referencePoints[this.selectedReferencePointIndex].geometry.coordinates = eventCoordinates;
         if (this.selectedReferencePointIndex === 0 &&
             this.referencePoints.length > 1) {
-            if (nextLine && !nextLine.properties.directionsIsActive) {
+            if (nextLine && !nextLine.properties.isFollowingDirections) {
                 this.linesBetweenReferencePoints[nextLine.properties.index].geometry.coordinates = [
                     eventCoordinates,
                     this.linesBetweenReferencePoints[nextLine.properties.index].geometry
@@ -6775,7 +6775,7 @@ class MapboxPathControl {
         }
         else if (this.selectedReferencePointIndex ===
             this.referencePoints.length - 1) {
-            if (previousLine && !previousLine.properties.directionsIsActive) {
+            if (previousLine && !previousLine.properties.isFollowingDirections) {
                 this.linesBetweenReferencePoints[previousLine.properties.index].geometry.coordinates = [
                     this.linesBetweenReferencePoints[previousLine.properties.index]
                         .geometry.coordinates[0],
@@ -6784,14 +6784,14 @@ class MapboxPathControl {
             }
         }
         else {
-            if (previousLine && !previousLine.properties.directionsIsActive) {
+            if (previousLine && !previousLine.properties.isFollowingDirections) {
                 this.linesBetweenReferencePoints[previousLine.properties.index].geometry.coordinates = [
                     this.linesBetweenReferencePoints[previousLine.properties.index]
                         .geometry.coordinates[0],
                     eventCoordinates,
                 ];
             }
-            if (nextLine && !nextLine.properties.directionsIsActive) {
+            if (nextLine && !nextLine.properties.isFollowingDirections) {
                 this.linesBetweenReferencePoints[nextLine.properties.index].geometry.coordinates = [
                     eventCoordinates,
                     this.linesBetweenReferencePoints[nextLine.properties.index].geometry
@@ -6799,10 +6799,10 @@ class MapboxPathControl {
                 ];
             }
         }
-        if (previousLine && previousLine.properties.directionsIsActive) {
+        if (previousLine && previousLine.properties.isFollowingDirections) {
             this.changeDirectionsModeOnPreviousLineWithDebounce(previousLine, true);
         }
-        if (nextLine && nextLine.properties.directionsIsActive) {
+        if (nextLine && nextLine.properties.isFollowingDirections) {
             this.changeDirectionsModeOnNextLineWithDebounce(nextLine, true);
         }
         this.updateSource();
@@ -6811,7 +6811,7 @@ class MapboxPathControl {
         this.map.off("mousemove", this.onMovePointFunction);
         this.handleMapCursor("grab");
     }
-    createNewPointAndLine(newPointCoordinates, directionsIsActive, previousLineCoordinates, nextLineCoordinates, currentLineIndex, waypoints) {
+    createNewPointAndLine(newPointCoordinates, isFollowingDirections, previousLineCoordinates, nextLineCoordinates, currentLineIndex, waypoints) {
         const referencePoint = {
             type: "Feature",
             geometry: {
@@ -6837,7 +6837,7 @@ class MapboxPathControl {
                     index: currentLineIndex !== undefined
                         ? currentLineIndex
                         : this.linesBetweenReferencePoints.length,
-                    directionsIsActive,
+                    isFollowingDirections,
                 },
             };
             if (waypoints) {
@@ -6863,7 +6863,7 @@ class MapboxPathControl {
                 },
                 properties: {
                     index: currentLineIndex + 1,
-                    directionsIsActive,
+                    isFollowingDirections,
                 },
             };
             const phantomJunctionLine = this.phantomJunctionLines.find((phantomJunctionLine) => phantomJunctionLine.properties.index === currentLineIndex &&
@@ -6894,7 +6894,7 @@ class MapboxPathControl {
                 const currentPoint = point(event.lngLat.toArray());
                 const nearestPoint = nearestPointOnLine(currentLineString, currentPoint);
                 const previousReferencePoint = this.referencePoints[this.referencePoints.length - 1];
-                const line = this.directionsIsActive
+                const line = this.isFollowingDirections
                     ? yield this.selectedDirectionsTheme.getPathByCoordinates([
                         previousReferencePoint.geometry.coordinates,
                         nearestPoint.geometry.coordinates,
@@ -6903,9 +6903,9 @@ class MapboxPathControl {
                         previousReferencePoint.geometry.coordinates,
                         nearestPoint.geometry.coordinates,
                     ];
-                this.createNewPointAndLine(nearestPoint.geometry.coordinates, this.directionsIsActive, this.directionsIsActive
+                this.createNewPointAndLine(nearestPoint.geometry.coordinates, this.isFollowingDirections, this.isFollowingDirections
                     ? line.coordinates
-                    : line, undefined, undefined, this.directionsIsActive
+                    : line, undefined, undefined, this.isFollowingDirections
                     ? line.waypoints
                     : undefined);
                 this.map.fire("MapboxPathControl.create", {
@@ -6927,7 +6927,7 @@ class MapboxPathControl {
             const currentPoint = point(event.lngLat.toArray());
             const nearestPoint = nearestPointOnLine(currentLineString, currentPoint);
             const newLines = lineSplit(currentLineString, nearestPoint);
-            this.createNewPointAndLine(nearestPoint.geometry.coordinates, lineUnderMouse[0].properties.directionsIsActive, newLines.features[0].geometry.coordinates, newLines.features[1].geometry.coordinates, lineUnderMouseIndex);
+            this.createNewPointAndLine(nearestPoint.geometry.coordinates, lineUnderMouse[0].properties.isFollowingDirections, newLines.features[0].geometry.coordinates, newLines.features[1].geometry.coordinates, lineUnderMouseIndex);
             this.syncIndex();
             this.updateSource();
             this.actionsPanel.remove();
@@ -6962,13 +6962,13 @@ class MapboxPathControl {
                 this.phantomJunctionLines = this.phantomJunctionLines.filter((phantomJunctionLine) => phantomJunctionLine.properties.index !==
                     previousLine.properties.index &&
                     phantomJunctionLine.properties.index !== nextLine.properties.index);
-                if (!previousLine.properties.directionsIsActive ||
-                    !nextLine.properties.directionsIsActive) {
+                if (!previousLine.properties.isFollowingDirections ||
+                    !nextLine.properties.isFollowingDirections) {
                     const lineBetweenReferencePoint = this.linesBetweenReferencePoints[previousLine.properties.index];
                     this.linesBetweenReferencePoints[previousLine.properties.index] = Object.assign(Object.assign({}, lineBetweenReferencePoint), { geometry: Object.assign(Object.assign({}, lineBetweenReferencePoint.geometry), { coordinates: [
                                 previousPoint.geometry.coordinates,
                                 nextPoint.geometry.coordinates,
-                            ] }), properties: Object.assign(Object.assign({}, lineBetweenReferencePoint.properties), { directionsIsActive: false }) });
+                            ] }), properties: Object.assign(Object.assign({}, lineBetweenReferencePoint.properties), { isFollowingDirections: false }) });
                 }
                 else {
                     const directionsResponse = yield this.selectedDirectionsTheme.getPathByCoordinates([previousPoint.geometry.coordinates, nextPoint.geometry.coordinates]);
@@ -7033,7 +7033,7 @@ class MapboxPathControl {
             let coordinates = [];
             const previousPoint = this.referencePoints[line.properties.index];
             const nextPoint = this.referencePoints[line.properties.index + 1];
-            if (line.properties.directionsIsActive && !forceDirections) {
+            if (line.properties.isFollowingDirections && !forceDirections) {
                 coordinates = [
                     previousPoint.geometry.coordinates,
                     nextPoint.geometry.coordinates,
@@ -7060,7 +7060,7 @@ class MapboxPathControl {
                 this.linesBetweenReferencePoints.splice(line.properties.index, 1, Object.assign(Object.assign({}, line), { geometry: {
                         type: "LineString",
                         coordinates,
-                    }, properties: Object.assign(Object.assign({}, line.properties), { directionsIsActive: !Boolean(line.properties.directionsIsActive) || forceDirections }) }));
+                    }, properties: Object.assign(Object.assign({}, line.properties), { isFollowingDirections: !Boolean(line.properties.isFollowingDirections) || forceDirections }) }));
                 this.updateSource();
                 this.actionsPanel.remove();
             }
