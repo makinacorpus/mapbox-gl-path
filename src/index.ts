@@ -12,10 +12,10 @@ import {
   referencePointsCircleLayer,
   referencePointsTextLayer,
   betweenPointsLineLayer,
-  dashedLineLayer,
+  phantomJunctionLineLayer,
   LayersCustomisation,
   pointTextLayerId,
-  dashedLineLayerId,
+  phantomJunctionLineLayerId,
 } from "./source-and-layers";
 import { languages, AvailableLanguages } from "./i18n";
 import "./mapbox-gl-path.css";
@@ -52,7 +52,7 @@ export default class MapboxPathControl implements IControl {
   private referencePoints: Feature<Point>[] = [];
   private selectedReferencePointIndex: number | undefined;
   private linesBetweenReferencePoints: Feature<LineString>[] = [];
-  private dashedLines: Feature<LineString>[] = [];
+  private phantomJunctionLines: Feature<LineString>[] = [];
   private onMovePointFunction = (event: MapMouseEvent) =>
     this.onMovePoint(event);
 
@@ -116,7 +116,7 @@ export default class MapboxPathControl implements IControl {
       pointCircleLayerId,
       pointTextLayerId,
       betweenPointsLineLayerId,
-      dashedLineLayerId,
+      phantomJunctionLineLayerId,
     ].forEach((layer) => {
       if (this.map!.getLayer(layer)) {
         this.map!.removeLayer(layer);
@@ -215,12 +215,12 @@ export default class MapboxPathControl implements IControl {
     );
     this.map!.addLayer(
       this.layersCustomisation &&
-        this.layersCustomisation.dashedLineLayerCustomisation
+        this.layersCustomisation.phantomJunctionLineLayerCustomisation
         ? {
-            ...dashedLineLayer,
-            ...this.layersCustomisation.dashedLineLayerCustomisation,
+            ...phantomJunctionLineLayer,
+            ...this.layersCustomisation.phantomJunctionLineLayerCustomisation,
           }
-        : dashedLineLayer,
+        : phantomJunctionLineLayer,
       pointCircleLayerId
     );
   }
@@ -535,7 +535,7 @@ export default class MapboxPathControl implements IControl {
       };
 
       if (waypoints) {
-        this.addDashedLines(
+        this.addPhantomJunctionLines(
           this.linesBetweenReferencePoints.length,
           [
             this.referencePoints[this.referencePoints.length - 2].geometry
@@ -571,13 +571,13 @@ export default class MapboxPathControl implements IControl {
           directionsIsActive,
         },
       };
-      const dashedLine = this.dashedLines.find(
-        (dashedLine) =>
-          dashedLine.properties!.index === currentLineIndex &&
-          dashedLine.properties!.isDeparture === false
+      const phantomJunctionLine = this.phantomJunctionLines.find(
+        (phantomJunctionLine) =>
+          phantomJunctionLine.properties!.index === currentLineIndex &&
+          phantomJunctionLine.properties!.isDeparture === false
       );
-      if (dashedLine) {
-        dashedLine.properties!.index = currentLineIndex! + 1;
+      if (phantomJunctionLine) {
+        phantomJunctionLine.properties!.index = currentLineIndex! + 1;
       }
 
       if (currentLineIndex !== undefined) {
@@ -693,9 +693,9 @@ export default class MapboxPathControl implements IControl {
       this.referencePoints.shift();
       if (this.referencePoints.length > 0) {
         this.linesBetweenReferencePoints.shift();
-        this.dashedLines = this.dashedLines.filter(
-          (dashedLine) =>
-            dashedLine.properties!.index !== nextLine.properties!.index
+        this.phantomJunctionLines = this.phantomJunctionLines.filter(
+          (phantomJunctionLine) =>
+            phantomJunctionLine.properties!.index !== nextLine.properties!.index
         );
       }
       this.syncIndex();
@@ -709,9 +709,10 @@ export default class MapboxPathControl implements IControl {
         1
       );
       this.syncIndex();
-      this.dashedLines = this.dashedLines.filter(
-        (dashedLine) =>
-          dashedLine.properties!.index !== previousLine.properties!.index
+      this.phantomJunctionLines = this.phantomJunctionLines.filter(
+        (phantomJunctionLine) =>
+          phantomJunctionLine.properties!.index !==
+          previousLine.properties!.index
       );
     } else {
       const previousPoint = this.referencePoints[
@@ -721,10 +722,11 @@ export default class MapboxPathControl implements IControl {
         this.selectedReferencePointIndex! + 1
       ];
 
-      this.dashedLines = this.dashedLines.filter(
-        (dashedLine) =>
-          dashedLine.properties!.index !== previousLine.properties!.index &&
-          dashedLine.properties!.index !== nextLine.properties!.index
+      this.phantomJunctionLines = this.phantomJunctionLines.filter(
+        (phantomJunctionLine) =>
+          phantomJunctionLine.properties!.index !==
+            previousLine.properties!.index &&
+          phantomJunctionLine.properties!.index !== nextLine.properties!.index
       );
       if (
         !previousLine.properties!.directionsIsActive ||
@@ -763,7 +765,7 @@ export default class MapboxPathControl implements IControl {
               ];
 
         if (directionsResponse?.waypoints) {
-          this.addDashedLines(
+          this.addPhantomJunctionLines(
             previousLine.properties!.index,
             [
               previousPoint.geometry.coordinates,
@@ -813,9 +815,11 @@ export default class MapboxPathControl implements IControl {
     );
     this.linesBetweenReferencePoints.forEach((line, index) => {
       if (line.properties!.index !== index) {
-        this.dashedLines.forEach((dashedLine) => {
-          if (dashedLine.properties!.index === line.properties!.index) {
-            dashedLine.properties!.index = index;
+        this.phantomJunctionLines.forEach((phantomJunctionLine) => {
+          if (
+            phantomJunctionLine.properties!.index === line.properties!.index
+          ) {
+            phantomJunctionLine.properties!.index = index;
           }
         });
       }
@@ -835,8 +839,9 @@ export default class MapboxPathControl implements IControl {
         previousPoint.geometry.coordinates,
         nextPoint.geometry.coordinates,
       ];
-      this.dashedLines = this.dashedLines.filter(
-        (dashedLine) => dashedLine.properties!.index !== line.properties!.index
+      this.phantomJunctionLines = this.phantomJunctionLines.filter(
+        (phantomJunctionLine) =>
+          phantomJunctionLine.properties!.index !== line.properties!.index
       );
     } else {
       const directionsResponse = await this.selectedDirectionsTheme!.getPathByCoordinates(
@@ -844,12 +849,12 @@ export default class MapboxPathControl implements IControl {
       );
       if (directionsResponse && directionsResponse.coordinates) {
         coordinates = directionsResponse.coordinates;
-        this.dashedLines = this.dashedLines.filter(
-          (dashedLine) =>
-            dashedLine.properties!.index !== line.properties!.index
+        this.phantomJunctionLines = this.phantomJunctionLines.filter(
+          (phantomJunctionLine) =>
+            phantomJunctionLine.properties!.index !== line.properties!.index
         );
         if (directionsResponse?.waypoints) {
-          this.addDashedLines(
+          this.addPhantomJunctionLines(
             line.properties!.index,
             [
               previousPoint.geometry.coordinates,
@@ -905,7 +910,7 @@ export default class MapboxPathControl implements IControl {
       features: [
         ...this.referencePoints,
         ...this.linesBetweenReferencePoints,
-        ...this.dashedLines,
+        ...this.phantomJunctionLines,
       ],
     };
   }
@@ -913,16 +918,16 @@ export default class MapboxPathControl implements IControl {
   public clearFeatureCollection(): void {
     this.referencePoints = [];
     this.linesBetweenReferencePoints = [];
-    this.dashedLines = [];
+    this.phantomJunctionLines = [];
     this.updateSource();
   }
 
-  private addDashedLines(
+  private addPhantomJunctionLines(
     index: number,
     departure: number[][],
     arrival: number[][]
   ): void {
-    const dashedLines: Feature<LineString>[] = [
+    const phantomJunctionLines: Feature<LineString>[] = [
       {
         type: "Feature",
         geometry: {
@@ -931,7 +936,7 @@ export default class MapboxPathControl implements IControl {
         },
         properties: {
           index,
-          isDashed: true,
+          isPhantomJunction: true,
           isDeparture: true,
         },
       },
@@ -943,11 +948,14 @@ export default class MapboxPathControl implements IControl {
         },
         properties: {
           index,
-          isDashed: true,
+          isPhantomJunction: true,
           isDeparture: false,
         },
       },
     ];
-    this.dashedLines = [...this.dashedLines, ...dashedLines];
+    this.phantomJunctionLines = [
+      ...this.phantomJunctionLines,
+      ...phantomJunctionLines,
+    ];
   }
 }
