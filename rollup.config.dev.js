@@ -45,7 +45,7 @@ export default [
             lineLayerCustomisation: {
               paint: { "line-width": 10, "line-color": "#0D47A1" },
             },
-            dashedLineLayerCustomisation: {
+            phantomJunctionLineLayerCustomisation: {
               paint: {
                 "line-width": 10,
                 "line-color": "#0D47A1",
