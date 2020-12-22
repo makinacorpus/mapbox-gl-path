@@ -885,20 +885,29 @@ export default class MapboxPathControl implements IControl {
       this.actionsPanel.remove();
     }
   }
+
+  private filterFeaturesByTypeAndSortByIndex<T extends Point | LineString>(
+    features: Feature<T>[],
+    type: String
+  ) {
+    return features
+      .filter((feature) => feature.geometry.type === type)
+      .sort((a, b) => a.properties!.index - b.properties!.index) as Feature<
+      T
+    >[];
+  }
+
   public setFeatureCollection({
     features,
   }: GeoJSON.FeatureCollection<GeoJSON.Geometry>): void {
-    this.referencePoints = features
-      .filter((feature) => feature.geometry.type === "Point")
-      .sort((a, b) => a.properties!.index - b.properties!.index) as Feature<
-      Point
-    >[];
+    this.referencePoints = this.filterFeaturesByTypeAndSortByIndex<Point>(
+      features as [],
+      "Point"
+    );
 
-    this.linesBetweenReferencePoints = features
-      .filter((feature) => feature.geometry.type === "LineString")
-      .sort((a, b) => a.properties!.index - b.properties!.index) as Feature<
+    this.linesBetweenReferencePoints = this.filterFeaturesByTypeAndSortByIndex<
       LineString
-    >[];
+    >(features as [], "LineString");
 
     this.syncIndex();
     this.updateSource();
