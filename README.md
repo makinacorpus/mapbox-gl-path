@@ -50,10 +50,18 @@ LayerCustomisation {
 }
 ```
 
-- featureCollection - GeoJSON.FeatureCollection<GeoJSON.Geometry> | undefined
+- featureCollection - `GeoJSON.FeatureCollection<GeoJSON.Geometry> | undefined`
 
-A feature can be type of Point or Linestring\
+The featureCollection includes features that could be type of Point or Linestring\
 Linestring can be a line between points or a phantom junction line
+
+- lineString - `Feature<LineString> | undefined`
+
+A feature of Linestring type (only applied if `featureCollection` parameter is not set) 
+Some properties can describe section of points and phantom junction  
+- `path: string[]` : a collection of string describing each junction. Values can be `free`, `direction` or `junction` 
+- `points: number[]` : a collection of all coordinates points between each junction
+If there are no properties, Mapbox-gl-path create two points at the edge of the lineString and determine if the path is following direction if `directionsTheme` is defined and `isFollowingDirections` is equal at `true`. 
 
 Point
 
@@ -114,11 +122,20 @@ getPathByCoordinates function return a object of type DirectionsThemeResponse wi
 
 return `GeoJSON.FeatureCollection<GeoJSON.Geometry>`
 
+#### getLineString
+
+return `Feature<LineString>`
+
 #### setFeatureCollection
 
 ##### Parameter
 
 featureCollection - `GeoJSON.FeatureCollection<GeoJSON.Geometry>`
+
+#### setLineString
+##### Parameter
+
+lineString - `Feature<LineString>`
 
 ## DEVELOPMENT
 
