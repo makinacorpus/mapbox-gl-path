@@ -7066,13 +7066,14 @@ class MapboxPathControl {
             }
         });
     }
+    filterFeaturesByTypeAndSortByIndex(features, type) {
+        return features
+            .filter((feature) => feature.geometry.type === type)
+            .sort((a, b) => a.properties.index - b.properties.index);
+    }
     setFeatureCollection({ features, }) {
-        this.referencePoints = features
-            .filter((feature) => feature.geometry.type === "Point")
-            .sort((a, b) => a.properties.index - b.properties.index);
-        this.linesBetweenReferencePoints = features
-            .filter((feature) => feature.geometry.type === "LineString")
-            .sort((a, b) => a.properties.index - b.properties.index);
+        this.referencePoints = this.filterFeaturesByTypeAndSortByIndex(features, "Point");
+        this.linesBetweenReferencePoints = this.filterFeaturesByTypeAndSortByIndex(features, "LineString");
         this.syncIndex();
         this.updateSource();
     }
