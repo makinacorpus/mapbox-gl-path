@@ -42,7 +42,14 @@ interface Parameters {
   languageId: AvailableLanguages | undefined;
   layersCustomisation: LayersCustomisation | undefined;
   featureCollection: GeoJSON.FeatureCollection<GeoJSON.Geometry> | undefined;
+  lineString: GeoJSON.Feature<LineString> | undefined;
   directionsThemes: DirectionsTheme[] | undefined;
+}
+
+interface LineStringify {
+  coordinates: number[][];
+  paths: string[];
+  points: number[][];
 }
 
 export default class MapboxPathControl implements IControl {
@@ -98,6 +105,8 @@ export default class MapboxPathControl implements IControl {
 
       if (parameters.featureCollection) {
         this.setFeatureCollection(parameters.featureCollection);
+      } else if (parameters.lineString) {
+        this.setLineString(parameters.lineString);
       }
     }
   }
@@ -921,6 +930,178 @@ export default class MapboxPathControl implements IControl {
         ...this.linesBetweenReferencePoints,
         ...this.phantomJunctionLines,
       ],
+    };
+  }
+
+  public setLineString(feature: Feature<LineString>): void {
+    const coordinates = [...feature.geometry.coordinates];
+
+    // If there are no `points` properties to describe the lineString,
+    // we create two points on the edges and assume the direction is enabled by its current state
+    const defaultReference = [
+      coordinates[0],
+      this.isFollowingDirections ? "direction" : "free",
+      coordinates[coordinates.length - 1],
+    ];
+
+    const referenceToBuildFeatureLineString =
+      feature.properties!.points?.flatMap((item: Number[][], index: number) =>
+        [item, feature.properties!.paths[index]].filter(Boolean)
+      ) ?? defaultReference;
+
+    const points = referenceToBuildFeatureLineString
+      // Filter removing `points` between route and phantom junction
+      .filter(
+        (
+          nextCoordinates: Number[],
+          index: number,
+          array: Number[] | String[]
+        ) =>
+          Array.isArray(nextCoordinates) &&
+          !(
+            (array[index - 1] === "junction" &&
+              array[index + 1] === "direction") ||
+            (array[index + 1] === "junction" &&
+              array[index - 1] === "direction")
+          )
+      )
+      // Build all points
+      .map((nextCoordinates: Number[], index: number) => ({
+        type: "Feature",
+        geometry: {
+          coordinates: nextCoordinates,
+          type: "Point",
+        },
+        properties: {
+          index,
+        },
+      }));
+
+    const lines = referenceToBuildFeatureLineString.reduce(
+      (
+        memo: [GeoJSON.Feature],
+        item: string | [],
+        index: number,
+        array: [string | []]
+      ) => {
+        if (typeof item !== "string") {
+          return memo;
+        }
+
+        // We crawl the coordinates delimited by point to define each part of the lineString
+        const [lngTo, latTo] = array[index + 1];
+
+        const toIndex = coordinates.findIndex(
+          ([lng, lat]) => lng === Number(lngTo) && lat === Number(latTo)
+        );
+
+        // The usage of the destructive splice method is wanted to avoid false positive coordinates
+        // if the whole lineString goes through min 2 times in the same path
+        const nextCoordinates = coordinates.splice(0, toIndex + 1, [
+          Number(lngTo),
+          Number(latTo),
+        ]);
+
+        const isPrevItemFollowingDirection = memo[memo.length - 1]?.properties!
+          .isFollowingDirections;
+
+        // phantomJunction and point related to a lineString must have the same index
+        const prevIndex = memo[memo.length - 1]?.properties!.index || 0;
+        const nextIndex =
+          prevIndex +
+          Number(
+            (isPrevItemFollowingDirection !== true && item === "junction") ||
+              (isPrevItemFollowingDirection === undefined &&
+                memo[memo.length - 1]?.properties!.isDeparture === false)
+          );
+
+        memo.push({
+          type: "Feature",
+          geometry: {
+            type: "LineString",
+            coordinates: nextCoordinates,
+          },
+          properties: {
+            index: nextIndex,
+            ...(item !== "junction" && {
+              isFollowingDirections: item === "direction",
+            }),
+            ...(item === "junction" && {
+              isPhantomJunction: true,
+              isDeparture: isPrevItemFollowingDirection !== true,
+            }),
+          },
+        });
+        return memo;
+      },
+      []
+    );
+
+    this.setFeatureCollection({
+      type: "FeatureCollection",
+      features: [...points, ...lines],
+    });
+  }
+
+  public getLineString(): Feature<LineString> {
+    const { features } = this.getFeatureCollection();
+    const { coordinates, points, paths } = features
+      // Get the order of the path with "lineString" and "point" mixed
+      .sort((a, b) => {
+        if (
+          a.geometry.type === "LineString" &&
+          a.properties!.index === b.properties!.index &&
+          b.properties!.isDeparture === true
+        ) {
+          return 1;
+        }
+        return a.properties!.index - b.properties!.index;
+      })
+      .reduce(
+        (lineStringify: LineStringify, feature) => {
+          if (feature.geometry.type === "Point") {
+            lineStringify.points.push(feature.geometry.coordinates);
+            lineStringify.coordinates.push(feature.geometry.coordinates);
+          }
+          if (feature.geometry.type === "LineString") {
+            lineStringify.coordinates.push(
+              // Remove the first and last item because we already got them with the push of points
+              ...feature.geometry.coordinates.slice(1, -1)
+            );
+            if (feature.properties!.isPhantomJunction) {
+              // If the phantomJunction is departure, we push the first one if not the second
+              const phantomJunctionCoordinateToPush =
+                feature.geometry.coordinates[
+                  Number(feature.properties!.isDeparture)
+                ];
+
+              lineStringify.coordinates.push(phantomJunctionCoordinateToPush);
+              lineStringify.points.push(phantomJunctionCoordinateToPush);
+              lineStringify.paths.push("junction");
+            } else if (feature.properties!.isFollowingDirections) {
+              lineStringify.paths.push("direction");
+            } else {
+              lineStringify.paths.push("free");
+            }
+          }
+          return lineStringify;
+        },
+        {
+          coordinates: [],
+          paths: [],
+          points: [],
+        }
+      );
+    return {
+      type: "Feature",
+      geometry: {
+        coordinates,
+        type: "LineString",
+      },
+      properties: {
+        paths,
+        points,
+      },
     };
   }
 
