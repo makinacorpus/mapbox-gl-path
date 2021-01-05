@@ -31,3 +31,13 @@ export const languages: Languages = {
     deletePoint: "Supprimer le point",
   },
 };
+
+export const getLanguageId = (languageId: string): AvailableLanguages => {
+  if (languageId in languages) {
+    return languageId as AvailableLanguages;
+  }
+  if (languageId.slice(0, 2) in languages) {
+    return languageId.slice(0, 2) as AvailableLanguages;
+  }
+  return "en";
+};

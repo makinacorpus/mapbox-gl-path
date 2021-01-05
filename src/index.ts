@@ -17,7 +17,7 @@ import {
   pointTextLayerId,
   phantomJunctionLineLayerId,
 } from "./source-and-layers";
-import { languages, AvailableLanguages } from "./i18n";
+import { getLanguageId, languages, AvailableLanguages } from "./i18n";
 import "./mapbox-gl-path.css";
 
 interface DirectionsTheme {
@@ -90,7 +90,7 @@ export default class MapboxPathControl implements IControl {
   constructor(parameters: Parameters | undefined) {
     if (parameters) {
       if (parameters.languageId) {
-        this.languageId = parameters.languageId;
+        this.languageId = getLanguageId(parameters.languageId);
       }
 
       if (
