@@ -81,7 +81,9 @@ export default class MapboxPathControl implements IControl {
     500,
     { maxWait: 1000 }
   );
-  private actionsPanel: Popup = new Popup();
+  private actionsPanel: Popup = new Popup({
+    className: "mapbox-gl-path-popup",
+  });
   private isFollowingDirections = false;
   private layersCustomisation: LayersCustomisation | undefined;
   private directionsThemes: DirectionsTheme[] | undefined;
@@ -345,6 +347,8 @@ export default class MapboxPathControl implements IControl {
     if (referencePointsUnderMouse.length > 0) {
       const deleteButton = document.createElement("button");
       deleteButton.textContent = languages[this.languageId].deletePoint;
+      deleteButton.className =
+        "mapbox-gl-path-popup-button mapbox-gl-path-popup-delete";
       deleteButton.setAttribute("type", "button");
       deleteButton.onclick = () => this.deletePoint();
 
@@ -361,6 +365,8 @@ export default class MapboxPathControl implements IControl {
     createPointOnLineButton.textContent =
       languages[this.languageId].createPoint;
     createPointOnLineButton.setAttribute("type", "button");
+    createPointOnLineButton.className =
+      "mapbox-gl-path-popup-button mapbox-gl-path-popup-createPointOnLine";
     createPointOnLineButton.onclick = () => this.createNewPointOnLine(event);
     const createIntermediatePointOnLineButton = document.createElement(
       "button"
@@ -368,6 +374,8 @@ export default class MapboxPathControl implements IControl {
     createIntermediatePointOnLineButton.textContent =
       languages[this.languageId].createIntermediatePoint;
     createIntermediatePointOnLineButton.setAttribute("type", "button");
+    createIntermediatePointOnLineButton.className =
+      "mapbox-gl-path-popup-button mapbox-gl-path-popup-createIntermediatePointOnLine";
     createIntermediatePointOnLineButton.onclick = () =>
       this.createIntermediatePointOnLine(event);
 
@@ -380,6 +388,8 @@ export default class MapboxPathControl implements IControl {
       ? languages[this.languageId].enableFollowDirectionMode
       : languages[this.languageId].disableFollowDirectionMode;
     changePathModeOnButton.setAttribute("type", "button");
+    changePathModeOnButton.className =
+      "mapbox-gl-path-popup-button mapbox-gl-path-popup-changePathMode";
     changePathModeOnButton.onclick = () =>
       this.changeDirectionsModeOnLine(lineUnderMouse[0]);
     const actionsPanelContainer = document.createElement("div");
@@ -395,6 +405,8 @@ export default class MapboxPathControl implements IControl {
         ? languages[this.languageId].enableFollowDirectionMode
         : languages[this.languageId].disableFollowDirectionMode;
       changePathModeOnLineButton.setAttribute("type", "button");
+      changePathModeOnLineButton.className =
+        "mapbox-gl-path-popup-button mapbox-gl-path-popup-changePathModeOnLine";
       changePathModeOnLineButton.onclick = () =>
         this.changeDirectionsModeOnLine(lineUnderMouse[0]);
       actionsPanelContainer.append(changePathModeOnLineButton);
