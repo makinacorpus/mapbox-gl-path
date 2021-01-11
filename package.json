@@ -6,7 +6,8 @@
   "main": "dist/index.js",
   "scripts": {
     "start": "rollup -c rollup.config.dev.js --watch",
-    "build": "rollup -c rollup.config.prod.js"
+    "build": "rollup -c rollup.config.prod.js",
+    "prepare": "npm run build"
   },
   "author": "bastien.alvez@makina-corpus.com",
   "license": "MIT",
