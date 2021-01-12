@@ -1,10 +1,10 @@
 import { Layer, GeoJSONSourceRaw, AnyLayout, AnyPaint } from "mapbox-gl";
 
-export const sourcePointAndLineId = "points-and-lines";
-export const pointCircleLayerId = "reference-points-circle";
-export const pointTextLayerId = "reference-points-text";
-export const betweenPointsLineLayerId = "between-points-lines";
-export const phantomJunctionLineLayerId = "phantom-junction-lines";
+export const sourcePointAndLineId = "gl-pathControl-points-and-lines";
+export const pointCircleLayerId = "gl-pathControl-reference-points-circle";
+export const pointTextLayerId = "gl-pathControl-reference-points-text";
+export const betweenPointsLineLayerId = "gl-pathControl-between-points-lines";
+export const phantomJunctionLineLayerId = "gl-pathControl-phantom-junction-lines";
 
 export const pointsAndLinesSource: GeoJSONSourceRaw = {
   type: "geojson",
