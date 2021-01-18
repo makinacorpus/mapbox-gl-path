@@ -1,6 +1,6 @@
 {
   "name": "@makina-corpus/mapbox-gl-path",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Create path with or without help of various directions API",
   "repository": "github:makinacorpus/mapbox-gl-path",
   "main": "dist/index.js",
