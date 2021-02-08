@@ -808,7 +808,7 @@ export default class MapboxPathControl implements IControl {
     this.actionsPanel.remove();
   }
 
-  private updateSource(): void {
+  private updateSource(fireEvent: boolean = true): void {
     const data = this.getFeatureCollection();
     const isSourceLoaded = () =>
       this.map!.getSource(sourcePointAndLineId) &&
@@ -819,7 +819,7 @@ export default class MapboxPathControl implements IControl {
         (this.map!.getSource(sourcePointAndLineId) as GeoJSONSource).setData(
           data
         );
-        this.map!.fire("MapboxPathControl.update", { featureCollection: data });
+        fireEvent && this.map!.fire("MapboxPathControl.update", { featureCollection: data });
         this.map!.off("sourcedata", setData);
       }
     };
@@ -931,7 +931,7 @@ export default class MapboxPathControl implements IControl {
     >(features as [], "LineString");
 
     this.syncIndex();
-    this.updateSource();
+    this.updateSource(false);
   }
 
   public getFeatureCollection(): GeoJSON.FeatureCollection<GeoJSON.Geometry> {
@@ -1121,7 +1121,7 @@ export default class MapboxPathControl implements IControl {
     this.referencePoints = [];
     this.linesBetweenReferencePoints = [];
     this.phantomJunctionLines = [];
-    this.updateSource();
+    this.updateSource(false);
   }
 
   private addPhantomJunctionLines(
