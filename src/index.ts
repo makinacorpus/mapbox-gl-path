@@ -117,11 +117,12 @@ export default class MapboxPathControl implements IControl {
     this.map = currentMap;
 
     this.pathControl = this.createUI();
-    this.map.once("idle", () => this.configureMap());
+    this.map.once("idle", this.configureMap);
     return this.pathControl;
   }
 
   public onRemove(): void {
+    this.map!.off("idle", this.configureMap);
     this.removeEvents();
     [
       pointCircleLayerId,
@@ -185,14 +186,14 @@ export default class MapboxPathControl implements IControl {
     return pathControlContainer;
   }
 
-  private configureMap(): void {
+  private configureMap = (): void => {
     this.initializeSourceAndLayers();
     this.initializeEvents();
 
     if (this.referencePoints.length > 0) {
       this.updateSource();
     }
-  }
+  };
 
   private initializeSourceAndLayers(): void {
     this.map!.addSource(sourcePointAndLineId, pointsAndLinesSource);
@@ -819,7 +820,10 @@ export default class MapboxPathControl implements IControl {
         (this.map!.getSource(sourcePointAndLineId) as GeoJSONSource).setData(
           data
         );
-        fireEvent && this.map!.fire("MapboxPathControl.update", { featureCollection: data });
+        fireEvent &&
+          this.map!.fire("MapboxPathControl.update", {
+            featureCollection: data,
+          });
         this.map!.off("sourcedata", setData);
       }
     };
