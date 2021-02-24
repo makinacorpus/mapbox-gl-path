@@ -95,7 +95,19 @@ export default [
                 )
           }
         ]`;
-          const scriptPage = `<script type="module">import MapboxPathControl from "./index.js"; mapboxgl.accessToken = ${mapboxglToken}; var map = new mapboxgl.Map({ container: "map", style: "mapbox://styles/mapbox/light-v10", center: [2.21, 46.22], zoom: 5 }); window.mapboxPathControl = new MapboxPathControl({ languageId: ${languageId}, layersCustomisation: ${layersCustomisation}, featureCollection: ${featureCollection}, directionsThemes: ${directionsThemes}}); map.addControl(window.mapboxPathControl);</script>`;
+          const scriptPage = `
+            <script type="module">
+              import MapboxPathControl from "./index.js";
+              mapboxgl.accessToken = ${mapboxglToken};
+              var map = new mapboxgl.Map({ container: "map", style: "mapbox://styles/mapbox/light-v10", center: [2.21, 46.22], zoom: 5 });
+              window.mapboxPathControl = new MapboxPathControl({
+                layersCustomisation: ${layersCustomisation},
+                featureCollection: ${featureCollection},
+                directionsThemes: ${directionsThemes},
+              });
+              map.addControl(window.mapboxPathControl);
+            </script>
+            `;
           const scripts = `${scriptMapbox}${scriptPage}`;
           return `<!DOCTYPE html><html ${attribute}><head>${meta}<title>${title}</title>${links}</head><body style="margin: 0">${content}${scripts}</body></html>`;
         },

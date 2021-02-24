@@ -1,43 +1,33 @@
-interface Language {
-  followDirection: string;
-  enableFollowDirectionMode: string;
-  disableFollowDirectionMode: string;
-  createPoint: string;
-  createIntermediatePoint: string;
-  deletePoint: string;
-}
-
-export type AvailableLanguages = "en" | "fr";
-
-type Languages = {
-  [languageId in AvailableLanguages]: Language;
+type TranslationsKeys = {
+  [key in string]: string;
 };
 
-export const languages: Languages = {
-  en: {
-    followDirection: "Follow direction",
-    enableFollowDirectionMode: "Enable direction",
-    disableFollowDirectionMode: "Disable direction",
-    createPoint: "Create point",
-    createIntermediatePoint: "Create intermediate point",
-    deletePoint: "Delete point",
-  },
-  fr: {
-    followDirection: "Suivre la direction",
-    enableFollowDirectionMode: "Activer la direction",
-    disableFollowDirectionMode: "Désactiver la direction",
-    createPoint: "Créer un point",
-    createIntermediatePoint: "Créer un point intermédiaire",
-    deletePoint: "Supprimer le point",
-  },
+type Params =
+  | {
+      context: string | undefined;
+    }
+  | undefined;
+
+/**
+ * t function mock to get mocked translations in component.
+ * Components will provide a way to get the real `t()` function as prop.
+ */
+export const translateMock = (translationsKeys: TranslationsKeys = {}) => (
+  key: string,
+  params: Params
+) => {
+  let targetedKey = translationsKeys[key] || key;
+  if (params?.context) {
+    targetedKey = translationsKeys[`${key}_${params.context}`];
+  }
+  return targetedKey;
 };
 
-export const getLanguageId = (languageId: string): AvailableLanguages => {
-  if (languageId in languages) {
-    return languageId as AvailableLanguages;
-  }
-  if (languageId.slice(0, 2) in languages) {
-    return languageId.slice(0, 2) as AvailableLanguages;
-  }
-  return "en";
+export const defaultLocales = {
+  "gl-pathControl.followDirection": "Follow direction",
+  "gl-pathControl.enableFollowDirectionMode": "Enable direction",
+  "gl-pathControl.disableFollowDirectionMode": "Disable direction",
+  "gl-pathControl.createPoint": "Create point",
+  "gl-pathControl.createIntermediatePoint": "Create intermediate point",
+  "gl-pathControl.deletePoint": "Delete point",
 };
