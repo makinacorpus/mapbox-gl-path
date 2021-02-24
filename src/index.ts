@@ -17,7 +17,7 @@ import {
   pointTextLayerId,
   phantomJunctionLineLayerId,
 } from "./source-and-layers";
-import { getLanguageId, languages, AvailableLanguages } from "./i18n";
+import { translateMock, defaultLocales } from "./i18n";
 import "./mapbox-gl-path.css";
 
 interface DirectionsTheme {
@@ -39,11 +39,11 @@ interface Waypoints {
 }
 
 interface Parameters {
-  languageId: AvailableLanguages | undefined;
   layersCustomisation: LayersCustomisation | undefined;
   featureCollection: GeoJSON.FeatureCollection<GeoJSON.Geometry> | undefined;
   lineString: GeoJSON.Feature<LineString> | undefined;
   directionsThemes: DirectionsTheme[] | undefined;
+  translate: Function | undefined;
 }
 
 interface LineStringify {
@@ -54,7 +54,7 @@ interface LineStringify {
 
 export default class MapboxPathControl implements IControl {
   private map: Map | undefined;
-  private languageId: AvailableLanguages = "en";
+  private translate: Function = (text: string) => text;
   private pathControl: HTMLElement | undefined;
   private referencePoints: Feature<Point>[] = [];
   private selectedReferencePointIndex: number | undefined;
@@ -91,24 +91,27 @@ export default class MapboxPathControl implements IControl {
 
   constructor(parameters: Parameters | undefined) {
     if (parameters) {
-      if (parameters.languageId) {
-        this.languageId = getLanguageId(parameters.languageId);
+      const {
+        directionsThemes,
+        layersCustomisation,
+        featureCollection,
+        lineString,
+        translate,
+      } = parameters;
+
+      this.translate = translate || translateMock(defaultLocales);
+
+      if (directionsThemes && directionsThemes.length > 0) {
+        this.directionsThemes = directionsThemes;
+        this.selectedDirectionsTheme = directionsThemes[0];
       }
 
-      if (
-        parameters.directionsThemes &&
-        parameters.directionsThemes.length > 0
-      ) {
-        this.directionsThemes = parameters.directionsThemes;
-        this.selectedDirectionsTheme = parameters.directionsThemes[0];
-      }
+      this.layersCustomisation = layersCustomisation;
 
-      this.layersCustomisation = parameters.layersCustomisation;
-
-      if (parameters.featureCollection) {
-        this.setFeatureCollection(parameters.featureCollection);
-      } else if (parameters.lineString) {
-        this.setLineString(parameters.lineString);
+      if (featureCollection) {
+        this.setFeatureCollection(featureCollection);
+      } else if (lineString) {
+        this.setLineString(lineString);
       }
     }
   }
@@ -173,7 +176,9 @@ export default class MapboxPathControl implements IControl {
       });
 
       const pathControlLabel = document.createElement("label");
-      pathControlLabel.textContent = languages[this.languageId].followDirection;
+      pathControlLabel.textContent = this.translate(
+        "gl-pathControl.followDirection"
+      );
       pathControlLabel.setAttribute("for", "checkbox-path");
 
       pathControlContainer.append(
@@ -347,7 +352,7 @@ export default class MapboxPathControl implements IControl {
 
     if (referencePointsUnderMouse.length > 0) {
       const deleteButton = document.createElement("button");
-      deleteButton.textContent = languages[this.languageId].deletePoint;
+      deleteButton.textContent = this.translate("gl-pathControl.deletePoint");
       deleteButton.className =
         "mapbox-gl-path-popup-button mapbox-gl-path-popup-delete";
       deleteButton.setAttribute("type", "button");
@@ -363,8 +368,9 @@ export default class MapboxPathControl implements IControl {
 
   private onContextMenuLine(event: MapMouseEvent): void {
     const createPointOnLineButton = document.createElement("button");
-    createPointOnLineButton.textContent =
-      languages[this.languageId].createPoint;
+    createPointOnLineButton.textContent = this.translate(
+      "gl-pathControl.createPoint"
+    );
     createPointOnLineButton.setAttribute("type", "button");
     createPointOnLineButton.className =
       "mapbox-gl-path-popup-button mapbox-gl-path-popup-createPointOnLine";
@@ -372,8 +378,9 @@ export default class MapboxPathControl implements IControl {
     const createIntermediatePointOnLineButton = document.createElement(
       "button"
     );
-    createIntermediatePointOnLineButton.textContent =
-      languages[this.languageId].createIntermediatePoint;
+    createIntermediatePointOnLineButton.textContent = this.translate(
+      "gl-pathControl.createIntermediatePoint"
+    );
     createIntermediatePointOnLineButton.setAttribute("type", "button");
     createIntermediatePointOnLineButton.className =
       "mapbox-gl-path-popup-button mapbox-gl-path-popup-createIntermediatePointOnLine";
@@ -386,8 +393,8 @@ export default class MapboxPathControl implements IControl {
     const changePathModeOnButton = document.createElement("button");
     changePathModeOnButton.textContent = lineUnderMouse[0].properties!
       .isFollowingDirections
-      ? languages[this.languageId].enableFollowDirectionMode
-      : languages[this.languageId].disableFollowDirectionMode;
+      ? this.translate("gl-pathControl.enableFollowDirectionMode")
+      : this.translate("gl-pathControl.disableFollowDirectionMode");
     changePathModeOnButton.setAttribute("type", "button");
     changePathModeOnButton.className =
       "mapbox-gl-path-popup-button mapbox-gl-path-popup-changePathMode";
@@ -403,8 +410,8 @@ export default class MapboxPathControl implements IControl {
       const changePathModeOnLineButton = document.createElement("button");
       changePathModeOnLineButton.textContent = !lineUnderMouse[0].properties!
         .isFollowingDirections
-        ? languages[this.languageId].enableFollowDirectionMode
-        : languages[this.languageId].disableFollowDirectionMode;
+        ? this.translate("gl-pathControl.enableFollowDirectionMode")
+        : this.translate("gl-pathControl.disableFollowDirectionMode");
       changePathModeOnLineButton.setAttribute("type", "button");
       changePathModeOnLineButton.className =
         "mapbox-gl-path-popup-button mapbox-gl-path-popup-changePathModeOnLine";

@@ -32,7 +32,7 @@ const featureCollection = mapboxPathControl.getFeatureCollection();
 }
 ```
 
-- languageId - string | undefined - default is 'en', availables languages are 'en' | 'fr'
+- translate - function | undefined - A function to provide locales. The default language is set to english (findable in src/i18n.js)
 
 - layersCustomisation - LayersCustomisation | undefined
 
