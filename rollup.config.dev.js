@@ -77,6 +77,7 @@ export default [
           {
             id: 2,
             name: "mapbox walking",
+            selected: true,
             getPathByCoordinates: async (coordinates) =>
               await fetch(
                 'https://api.mapbox.com/directions/v5/mapbox/walking/'+coordinates[0].toString()+';'+coordinates[1].toString()+'?geometries=geojson&overview=full&access_token=${mapboxglToken.slice(

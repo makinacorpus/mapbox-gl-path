@@ -23,6 +23,7 @@ import "./mapbox-gl-path.css";
 interface DirectionsTheme {
   id: number;
   name: string;
+  selected: boolean;
   getPathByCoordinates: (
     coordinates: number[][]
   ) => Promise<DirectionsThemeResponse | undefined>;
@@ -103,7 +104,9 @@ export default class MapboxPathControl implements IControl {
 
       if (directionsThemes && directionsThemes.length > 0) {
         this.directionsThemes = directionsThemes;
-        this.selectedDirectionsTheme = directionsThemes[0];
+        this.selectedDirectionsTheme =
+          directionsThemes.find(({ selected }) => selected) ||
+          directionsThemes[0];
       }
 
       this.layersCustomisation = layersCustomisation;
@@ -148,10 +151,20 @@ export default class MapboxPathControl implements IControl {
     const pathControlContainer = document.createElement("div");
 
     if (this.directionsThemes && this.directionsThemes.length > 0) {
+      const hasSelectedDirectionThemes = this.directionsThemes.some(
+        ({ selected }) => selected === true
+      );
       pathControlContainer.className = "mapbox-gl-path-container";
       const pathControlCheckbox = document.createElement("input");
       pathControlCheckbox.setAttribute("id", "checkbox-path");
       pathControlCheckbox.setAttribute("type", "checkbox");
+      if (hasSelectedDirectionThemes) {
+        pathControlCheckbox.setAttribute(
+          "checked",
+          hasSelectedDirectionThemes.toString()
+        );
+        this.isFollowingDirections = true;
+      }
       pathControlCheckbox.addEventListener(
         "change",
         (event) =>
@@ -172,6 +185,7 @@ export default class MapboxPathControl implements IControl {
         const pathControlSelectOption = document.createElement("option");
         pathControlSelectOption.value = theme.id.toString();
         pathControlSelectOption.textContent = theme.name;
+        pathControlSelectOption.selected = theme.selected;
         pathControlSelect.append(pathControlSelectOption);
       });
 
