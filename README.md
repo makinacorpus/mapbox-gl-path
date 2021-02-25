@@ -25,14 +25,14 @@ const featureCollection = mapboxPathControl.getFeatureCollection();
 
 ```
 {
-  languageId: AvailableLanguages | undefined;
+  translate: Function | undefined;
   layersCustomisation: LayersCustomisation | undefined;
   featureCollection: GeoJSON.FeatureCollection<GeoJSON.Geometry> | undefined;
   directionsThemes: DirectionsTheme[] | undefined;
 }
 ```
 
-- translate - function | undefined - A function to provide locales. The default language is set to english (findable in src/i18n.js)
+- translate - Function | undefined - A function to provide locales. The default language is set to english (findable in src/i18n.js)
 
 - layersCustomisation - LayersCustomisation | undefined
 
