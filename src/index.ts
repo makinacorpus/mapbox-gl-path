@@ -1044,7 +1044,7 @@ export default class MapboxPathControl implements IControl {
 
         // The usage of the destructive splice method is wanted to avoid false positive coordinates
         // if the whole lineString goes through min 2 times in the same path
-        const nextCoordinates = coordinates.splice(0, toIndex + 1, [
+        const nextCoordinates = coordinates.splice(0, toIndex + 1 || 2, [
           Number(lngTo),
           Number(latTo),
         ]);
