@@ -953,7 +953,17 @@ export default class MapboxPathControl implements IControl {
 
     this.linesBetweenReferencePoints = this.filterFeaturesByTypeAndSortByIndex<
       LineString
-    >(features as [], "LineString");
+    >(
+      features.filter(({ properties }) => !properties!.isPhantomJunction) as [],
+      "LineString"
+    );
+
+    this.phantomJunctionLines = this.filterFeaturesByTypeAndSortByIndex<
+      LineString
+    >(
+      features.filter(({ properties }) => properties!.isPhantomJunction) as [],
+      "LineString"
+    );
 
     this.syncIndex();
     this.updateSource(false);
