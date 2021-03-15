@@ -18,6 +18,7 @@ import {
   phantomJunctionLineLayerId,
 } from "./source-and-layers";
 import { translateMock, defaultLocales } from "./i18n";
+import { getLngLat } from "./utils";
 import "./mapbox-gl-path.css";
 
 interface DirectionsTheme {
@@ -307,7 +308,7 @@ export default class MapboxPathControl implements IControl {
     );
 
     if (!referencePointOrLineIsUnderMouse) {
-      const newPointCoordinates = event.lngLat.toArray();
+      const newPointCoordinates = getLngLat(event.lngLat);
       const previousReferencePoint: Feature<Point> | null =
         this.referencePoints.length > 0
           ? this.referencePoints[this.referencePoints.length - 1]
@@ -459,7 +460,7 @@ export default class MapboxPathControl implements IControl {
   }
 
   private onMovePoint(event: MapMouseEvent): void {
-    const eventCoordinates = event.lngLat.toArray();
+    const eventCoordinates = getLngLat(event.lngLat);
     const previousLine = this.linesBetweenReferencePoints[
       this.selectedReferencePointIndex! - 1
     ];
@@ -651,7 +652,7 @@ export default class MapboxPathControl implements IControl {
       const currentLineString: Feature<LineString> = lineString(
         lineUnderMouse[0].geometry.coordinates
       );
-      const currentPoint: Feature<Point> = point(event.lngLat.toArray());
+      const currentPoint: Feature<Point> = point(getLngLat(event.lngLat));
       const nearestPoint: Feature<Point> = nearestPointOnLine(
         currentLineString,
         currentPoint
@@ -702,7 +703,7 @@ export default class MapboxPathControl implements IControl {
       const currentLineString: Feature<LineString> = lineString(
         lineUnderMouse[0].geometry.coordinates
       );
-      const currentPoint: Feature<Point> = point(event.lngLat.toArray());
+      const currentPoint: Feature<Point> = point(getLngLat(event.lngLat));
       const nearestPoint: Feature<Point> = nearestPointOnLine(
         currentLineString,
         currentPoint
