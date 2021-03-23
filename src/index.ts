@@ -292,6 +292,32 @@ export default class MapboxPathControl implements IControl {
     );
   }
 
+  private async drawNewLine(
+    fromCoordinates: number[],
+    toCoordinates: number[]
+  ): Promise<void> {
+    const line = this.isFollowingDirections
+      ? await this.selectedDirectionsTheme!.getPathByCoordinates([
+          fromCoordinates,
+          toCoordinates,
+        ])
+      : [fromCoordinates, toCoordinates];
+    if (line) {
+      this.createNewPointAndLine(
+        toCoordinates,
+        this.isFollowingDirections,
+        this.isFollowingDirections
+          ? (line as DirectionsThemeResponse).coordinates
+          : (line as number[][]),
+        undefined,
+        undefined,
+        this.isFollowingDirections
+          ? (line as DirectionsThemeResponse).waypoints
+          : undefined
+      );
+    }
+  }
+
   private handleMapCursor(cursor: string): void {
     this.map!.getCanvas().style.cursor = cursor;
   }
@@ -316,26 +342,10 @@ export default class MapboxPathControl implements IControl {
           : null;
 
       if (previousReferencePoint) {
-        const line = this.isFollowingDirections
-          ? await this.selectedDirectionsTheme!.getPathByCoordinates([
-              previousReferencePoint.geometry.coordinates,
-              newPointCoordinates,
-            ])
-          : [previousReferencePoint.geometry.coordinates, newPointCoordinates];
-        if (line) {
-          this.createNewPointAndLine(
-            newPointCoordinates,
-            this.isFollowingDirections,
-            this.isFollowingDirections
-              ? (line as DirectionsThemeResponse).coordinates
-              : (line as number[][]),
-            undefined,
-            undefined,
-            this.isFollowingDirections
-              ? (line as DirectionsThemeResponse).waypoints
-              : undefined
-          );
-        }
+        this.drawNewLine(
+          previousReferencePoint.geometry.coordinates,
+          newPointCoordinates
+        );
       } else {
         this.createNewPointAndLine(newPointCoordinates);
       }
@@ -642,27 +652,10 @@ export default class MapboxPathControl implements IControl {
       const previousReferencePoint = this.referencePoints[
         this.referencePoints.length - 1
       ];
-      const line = this.isFollowingDirections
-        ? await this.selectedDirectionsTheme!.getPathByCoordinates([
-            previousReferencePoint.geometry.coordinates,
-            nearestPoint.geometry.coordinates,
-          ])
-        : [
-            previousReferencePoint.geometry.coordinates,
-            nearestPoint.geometry.coordinates,
-          ];
 
-      this.createNewPointAndLine(
-        nearestPoint.geometry.coordinates,
-        this.isFollowingDirections,
-        this.isFollowingDirections
-          ? (line as DirectionsThemeResponse).coordinates
-          : (line as number[][]),
-        undefined,
-        undefined,
-        this.isFollowingDirections
-          ? (line as DirectionsThemeResponse).waypoints
-          : undefined
+      this.drawNewLine(
+        previousReferencePoint.geometry.coordinates,
+        nearestPoint.geometry.coordinates
       );
 
       this.map!.fire("MapboxPathControl.create", {
