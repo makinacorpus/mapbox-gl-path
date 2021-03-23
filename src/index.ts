@@ -18,7 +18,7 @@ import {
   phantomJunctionLineLayerId,
 } from "./source-and-layers";
 import { translateMock, defaultLocales } from "./i18n";
-import { getLngLat } from "./utils";
+import { createElement, getLngLat } from "./utils";
 import "./mapbox-gl-path.css";
 
 interface DirectionsTheme {
@@ -156,9 +156,10 @@ export default class MapboxPathControl implements IControl {
         ({ selected }) => selected === true
       );
       pathControlContainer.className = "mapbox-gl-path-container";
-      const pathControlCheckbox = document.createElement("input");
-      pathControlCheckbox.setAttribute("id", "checkbox-path");
-      pathControlCheckbox.setAttribute("type", "checkbox");
+      const pathControlCheckbox = createElement("input", {
+        id: "checkbox-path",
+        type: "checkbox",
+      });
       if (hasSelectedDirectionThemes) {
         pathControlCheckbox.setAttribute(
           "checked",
@@ -171,30 +172,30 @@ export default class MapboxPathControl implements IControl {
         (event) =>
           (this.isFollowingDirections = (event.target as HTMLInputElement).checked)
       );
-      const pathControlSelect = document.createElement("select");
-      pathControlSelect.onchange = (event) => {
-        this.selectedDirectionsTheme = this.directionsThemes?.find(
-          (directionsTheme) =>
-            directionsTheme.id ===
-            Number((event.target as HTMLSelectElement).value)
-        );
-      };
+      const pathControlSelect = createElement("select", {
+        onchange: (event: { target: HTMLSelectElement }) => {
+          this.selectedDirectionsTheme = this.directionsThemes?.find(
+            (directionsTheme) =>
+              directionsTheme.id === Number(event.target.value)
+          );
+        },
+      });
       if (this.directionsThemes.length === 1) {
         pathControlSelect.setAttribute("disabled", "true");
       }
       this.directionsThemes.forEach((theme) => {
-        const pathControlSelectOption = document.createElement("option");
-        pathControlSelectOption.value = theme.id.toString();
-        pathControlSelectOption.textContent = theme.name;
-        pathControlSelectOption.selected = theme.selected;
+        const pathControlSelectOption = createElement("option", {
+          selected: theme.selected,
+          textContent: theme.name,
+          value: theme.id.toString(),
+        });
         pathControlSelect.append(pathControlSelectOption);
       });
 
-      const pathControlLabel = document.createElement("label");
-      pathControlLabel.textContent = this.translate(
-        "gl-pathControl.followDirection"
-      );
-      pathControlLabel.setAttribute("for", "checkbox-path");
+      const pathControlLabel = createElement("label", {
+        htmlFor: "checkbox-path",
+        textContent: this.translate("gl-pathControl.followDirection"),
+      });
 
       pathControlContainer.append(
         pathControlCheckbox,
@@ -366,12 +367,11 @@ export default class MapboxPathControl implements IControl {
     );
 
     if (referencePointsUnderMouse.length > 0) {
-      const deleteButton = document.createElement("button");
-      deleteButton.textContent = this.translate("gl-pathControl.deletePoint");
-      deleteButton.className =
-        "mapbox-gl-path-popup-button mapbox-gl-path-popup-delete";
-      deleteButton.setAttribute("type", "button");
-      deleteButton.onclick = () => this.deletePoint();
+      const deleteButton = createElement("button", {
+        className: "mapbox-gl-path-popup-button mapbox-gl-path-popup-delete",
+        onclick: () => this.deletePoint(),
+        textContent: this.translate("gl-pathControl.deletePoint"),
+      });
 
       this.selectedReferencePointIndex = referencePointsUnderMouse[0].properties!.index;
       this.actionsPanel
@@ -382,39 +382,23 @@ export default class MapboxPathControl implements IControl {
   }
 
   private onContextMenuLine(event: MapMouseEvent): void {
-    const createPointOnLineButton = document.createElement("button");
-    createPointOnLineButton.textContent = this.translate(
-      "gl-pathControl.createPoint"
-    );
-    createPointOnLineButton.setAttribute("type", "button");
-    createPointOnLineButton.className =
-      "mapbox-gl-path-popup-button mapbox-gl-path-popup-createPointOnLine";
-    createPointOnLineButton.onclick = () => this.createNewPointOnLine(event);
-    const createIntermediatePointOnLineButton = document.createElement(
-      "button"
-    );
-    createIntermediatePointOnLineButton.textContent = this.translate(
-      "gl-pathControl.createIntermediatePoint"
-    );
-    createIntermediatePointOnLineButton.setAttribute("type", "button");
-    createIntermediatePointOnLineButton.className =
-      "mapbox-gl-path-popup-button mapbox-gl-path-popup-createIntermediatePointOnLine";
-    createIntermediatePointOnLineButton.onclick = () =>
-      this.createIntermediatePointOnLine(event);
+    const createPointOnLineButton = createElement("button", {
+      className:
+        "mapbox-gl-path-popup-button mapbox-gl-path-popup-createPointOnLine",
+      onclick: () => this.createNewPointOnLine(event),
+      textContent: this.translate("gl-pathControl.createPoint"),
+    });
+
+    const createIntermediatePointOnLineButton = createElement("button", {
+      className:
+        "mapbox-gl-path-popup-button mapbox-gl-path-popup-createIntermediatePointOnLine",
+      onclick: () => this.createIntermediatePointOnLine(event),
+      textContent: this.translate("gl-pathControl.createIntermediatePoint"),
+    });
 
     const lineUnderMouse = this.map!.queryRenderedFeatures(event.point, {
       layers: [betweenPointsLineLayerId],
     }) as Feature<LineString>[];
-    const changePathModeOnButton = document.createElement("button");
-    changePathModeOnButton.textContent = lineUnderMouse[0].properties!
-      .isFollowingDirections
-      ? this.translate("gl-pathControl.enableFollowDirectionMode")
-      : this.translate("gl-pathControl.disableFollowDirectionMode");
-    changePathModeOnButton.setAttribute("type", "button");
-    changePathModeOnButton.className =
-      "mapbox-gl-path-popup-button mapbox-gl-path-popup-changePathMode";
-    changePathModeOnButton.onclick = () =>
-      this.changeDirectionsModeOnLine(lineUnderMouse[0]);
     const actionsPanelContainer = document.createElement("div");
     actionsPanelContainer.append(
       createPointOnLineButton,
@@ -422,16 +406,14 @@ export default class MapboxPathControl implements IControl {
     );
 
     if (this.directionsThemes && this.directionsThemes.length > 0) {
-      const changePathModeOnLineButton = document.createElement("button");
-      changePathModeOnLineButton.textContent = !lineUnderMouse[0].properties!
-        .isFollowingDirections
-        ? this.translate("gl-pathControl.enableFollowDirectionMode")
-        : this.translate("gl-pathControl.disableFollowDirectionMode");
-      changePathModeOnLineButton.setAttribute("type", "button");
-      changePathModeOnLineButton.className =
-        "mapbox-gl-path-popup-button mapbox-gl-path-popup-changePathModeOnLine";
-      changePathModeOnLineButton.onclick = () =>
-        this.changeDirectionsModeOnLine(lineUnderMouse[0]);
+      const changePathModeOnLineButton = createElement("button", {
+        className:
+          "mapbox-gl-path-popup-button mapbox-gl-path-popup-changePathModeOnLine",
+        onclick: () => this.changeDirectionsModeOnLine(lineUnderMouse[0]),
+        textContent: !lineUnderMouse[0].properties!.isFollowingDirections
+          ? this.translate("gl-pathControl.enableFollowDirectionMode")
+          : this.translate("gl-pathControl.disableFollowDirectionMode"),
+      });
       actionsPanelContainer.append(changePathModeOnLineButton);
     }
 
