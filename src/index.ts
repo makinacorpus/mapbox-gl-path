@@ -1,5 +1,12 @@
 import { Feature, Point, LineString } from "geojson";
-import { Map, IControl, MapMouseEvent, GeoJSONSource, Popup } from "mapbox-gl";
+import {
+  Map,
+  IControl,
+  MapMouseEvent,
+  GeoJSONSource,
+  Popup,
+  Coordinate,
+} from "mapbox-gl";
 import { point, lineString } from "@turf/helpers";
 import nearestPointOnLine from "@turf/nearest-point-on-line";
 import lineSplit from "@turf/line-split";
@@ -18,7 +25,7 @@ import {
   phantomJunctionLineLayerId,
 } from "./source-and-layers";
 import { translateMock, defaultLocales } from "./i18n";
-import { createElement, getLngLat } from "./utils";
+import { createElement, getLineEnds, getLngLat } from "./utils";
 import "./mapbox-gl-path.css";
 
 interface DirectionsTheme {
@@ -919,6 +926,32 @@ export default class MapboxPathControl implements IControl {
       features.filter(({ properties }) => properties!.isPhantomJunction) as [],
       "LineString"
     );
+
+    // In case the featureCollection contains only one LineString, it needs to set two Point at edges
+    if (!this.referencePoints.length && !this.phantomJunctionLines.length) {
+      this.referencePoints = getLineEnds(
+        this.linesBetweenReferencePoints[0].geometry.coordinates
+      ).map((point: Coordinate, index: Number) => ({
+        type: "Feature",
+        geometry: {
+          type: "Point",
+          coordinates: point,
+        },
+        properties: {
+          index,
+        },
+      }));
+      this.linesBetweenReferencePoints = this.linesBetweenReferencePoints.map(
+        (line, index) => ({
+          ...line,
+          properties: {
+            index,
+            isFollowingDirections: this.isFollowingDirections,
+            ...line.properties,
+          },
+        })
+      );
+    }
 
     this.syncIndex();
     this.updateSource(false);
