@@ -1024,7 +1024,8 @@ export default class MapboxPathControl implements IControl {
         }
 
         // We crawl the coordinates delimited by point to define each part of the lineString
-        const [lngTo, latTo] = array[index + 1];
+        const [lngTo, latTo] =
+          array[index + 1] || coordinates[coordinates.length - 1];
 
         const toIndex = coordinates.findIndex(
           ([lng, lat]) => lng === Number(lngTo) && lat === Number(latTo)
