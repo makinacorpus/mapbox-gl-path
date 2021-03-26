@@ -451,8 +451,7 @@ export default class MapboxPathControl implements IControl {
     }
   }
 
-  private onMovePoint(event: MapMouseEvent): void {
-    const eventCoordinates = getLngLat(event.lngLat);
+  private movePointHandler(coordinates: number[]): void {
     const previousLine = this.linesBetweenReferencePoints[
       this.selectedReferencePointIndex! - 1
     ];
@@ -468,62 +467,42 @@ export default class MapboxPathControl implements IControl {
 
     this.referencePoints[
       this.selectedReferencePointIndex!
-    ].geometry.coordinates = eventCoordinates;
-    if (
-      this.selectedReferencePointIndex! === 0 &&
-      this.referencePoints.length > 1
-    ) {
-      if (nextLine && !nextLine.properties!.isFollowingDirections) {
-        this.linesBetweenReferencePoints[
-          nextLine.properties!.index
-        ].geometry.coordinates = [
-          eventCoordinates,
-          this.linesBetweenReferencePoints[nextLine.properties!.index].geometry
-            .coordinates[1],
-        ];
-      }
-    } else if (
-      this.selectedReferencePointIndex! ===
-      this.referencePoints.length - 1
-    ) {
-      if (previousLine && !previousLine.properties!.isFollowingDirections) {
+    ].geometry.coordinates = coordinates;
+
+    if (previousLine) {
+      if (previousLine.properties!.isFollowingDirections) {
+        this.changeDirectionsModeOnPreviousLineWithDebounce(previousLine, true);
+      } else {
         this.linesBetweenReferencePoints[
           previousLine.properties!.index
         ].geometry.coordinates = [
           this.linesBetweenReferencePoints[previousLine.properties!.index]
             .geometry.coordinates[0],
-          eventCoordinates,
-        ];
-      }
-    } else {
-      if (previousLine && !previousLine.properties!.isFollowingDirections) {
-        this.linesBetweenReferencePoints[
-          previousLine.properties!.index
-        ].geometry.coordinates = [
-          this.linesBetweenReferencePoints[previousLine.properties!.index]
-            .geometry.coordinates[0],
-          eventCoordinates,
-        ];
-      }
-      if (nextLine && !nextLine.properties!.isFollowingDirections) {
-        this.linesBetweenReferencePoints[
-          nextLine.properties!.index
-        ].geometry.coordinates = [
-          eventCoordinates,
-          this.linesBetweenReferencePoints[nextLine.properties!.index].geometry
-            .coordinates[1],
+          coordinates,
         ];
       }
     }
 
-    if (previousLine && previousLine.properties!.isFollowingDirections) {
-      this.changeDirectionsModeOnPreviousLineWithDebounce(previousLine, true);
-    }
-    if (nextLine && nextLine.properties!.isFollowingDirections) {
-      this.changeDirectionsModeOnNextLineWithDebounce(nextLine, true);
+    if (nextLine) {
+      if (nextLine.properties!.isFollowingDirections) {
+        this.changeDirectionsModeOnNextLineWithDebounce(nextLine, true);
+      } else {
+        this.linesBetweenReferencePoints[
+          nextLine.properties!.index
+        ].geometry.coordinates = [
+          coordinates,
+          this.linesBetweenReferencePoints[nextLine.properties!.index].geometry
+            .coordinates[1],
+        ];
+      }
     }
 
     this.updateSource();
+  }
+
+  private onMovePoint(event: MapMouseEvent): void {
+    const eventCoordinates = getLngLat(event.lngLat);
+    this.movePointHandler(eventCoordinates);
   }
 
   private onUpPoint(): void {
