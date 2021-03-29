@@ -1,12 +1,5 @@
 import { Feature, Point, LineString } from "geojson";
-import {
-  Map,
-  IControl,
-  MapMouseEvent,
-  GeoJSONSource,
-  Popup,
-  Coordinate,
-} from "mapbox-gl";
+import { Map, IControl, MapMouseEvent, GeoJSONSource, Popup } from "mapbox-gl";
 import { point, lineString } from "@turf/helpers";
 import nearestPointOnLine from "@turf/nearest-point-on-line";
 import lineSplit from "@turf/line-split";
@@ -931,7 +924,7 @@ export default class MapboxPathControl implements IControl {
     if (!this.referencePoints.length && !this.phantomJunctionLines.length) {
       this.referencePoints = getLineEnds(
         this.linesBetweenReferencePoints[0].geometry.coordinates
-      ).map((point: Coordinate, index: Number) => ({
+      ).map((point, index) => ({
         type: "Feature",
         geometry: {
           type: "Point",

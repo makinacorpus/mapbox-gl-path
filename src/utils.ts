@@ -6,6 +6,7 @@ export function createElement(tagName: string, props: object = {}) {
     element.setAttribute("type", "button");
   }
   return Object.assign(element, props);
+}
 
 export function getLineEnds(coordinates: number[][]) {
   return [coordinates[0], coordinates[coordinates.length - 1]];
