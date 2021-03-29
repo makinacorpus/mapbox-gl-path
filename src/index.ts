@@ -2,6 +2,7 @@ import { Feature, Point, LineString } from "geojson";
 import { Map, IControl, MapMouseEvent, GeoJSONSource, Popup } from "mapbox-gl";
 import { point, lineString } from "@turf/helpers";
 import nearestPointOnLine from "@turf/nearest-point-on-line";
+import pointToLineDistance from "@turf/point-to-line-distance";
 import lineSplit from "@turf/line-split";
 import debounce from "lodash.debounce";
 import {
@@ -45,6 +46,7 @@ interface Parameters {
   featureCollection: GeoJSON.FeatureCollection<GeoJSON.Geometry> | undefined;
   lineString: GeoJSON.Feature<LineString> | undefined;
   directionsThemes: DirectionsTheme[] | undefined;
+  isLoopTrail: boolean | undefined;
   translate: Function | undefined;
 }
 
@@ -87,6 +89,7 @@ export default class MapboxPathControl implements IControl {
     className: "mapbox-gl-path-popup",
   });
   private isFollowingDirections = false;
+  private isLoopTrail = false;
   private layersCustomisation: LayersCustomisation | undefined;
   private directionsThemes: DirectionsTheme[] | undefined;
   private selectedDirectionsTheme: DirectionsTheme | undefined;
@@ -336,6 +339,47 @@ export default class MapboxPathControl implements IControl {
 
     if (!referencePointOrLineIsUnderMouse) {
       const newPointCoordinates = getLngLat(event.lngLat);
+
+      if (this.isLoopTrail) {
+        const newPoint: Feature<Point> = point(getLngLat(event.lngLat));
+
+        let nearestLineString = this.linesBetweenReferencePoints[0];
+        this.linesBetweenReferencePoints.slice(1).forEach((line) => {
+          const currentDistance = pointToLineDistance(
+            newPoint,
+            nearestLineString
+          );
+          const newDistance = pointToLineDistance(newPoint, line);
+          if (newDistance < currentDistance) {
+            nearestLineString = line;
+          }
+        });
+
+        const nearestPointInLineString: Feature<Point> = nearestPointOnLine(
+          nearestLineString,
+          newPoint
+        );
+
+        const newLines = lineSplit(nearestLineString, nearestPointInLineString);
+
+        this.selectedReferencePointIndex =
+          nearestLineString.properties!.index + 1;
+
+        this.createNewPointAndLine(
+          nearestPointInLineString.geometry.coordinates,
+          newPoint.properties!.isFollowingDirections,
+          newLines.features[0].geometry!.coordinates,
+          newLines.features[1].geometry!.coordinates,
+          nearestLineString?.properties!.index
+        );
+
+        this.movePointHandler(newPointCoordinates);
+
+        this.syncIndex();
+        this.updateSource();
+
+        return;
+      }
       const previousReferencePoint: Feature<Point> | null =
         this.referencePoints.length > 0
           ? this.referencePoints[this.referencePoints.length - 1]
@@ -383,10 +427,40 @@ export default class MapboxPathControl implements IControl {
         textContent: this.translate("gl-pathControl.deletePoint"),
       });
 
+      const actionsPanelContainer = document.createElement("div");
+      actionsPanelContainer.append(deleteButton);
+
+      if (
+        referencePointsUnderMouse.find(
+          ({ properties }) =>
+            properties!.index === 0 ||
+            properties!.index === this.referencePoints.length - 1
+        ) &&
+        this.referencePoints.length > 2
+      ) {
+        const loopOrOneWayButton = createElement(
+          "button",
+          this.isLoopTrail
+            ? {
+                className:
+                  "mapbox-gl-path-popup-button mapbox-gl-path-popup-oneWay",
+                onclick: () => this.setOneWayTrail(),
+                textContent: this.translate("gl-pathControl.oneWayPoint"),
+              }
+            : {
+                className:
+                  "mapbox-gl-path-popup-button mapbox-gl-path-popup-loop",
+                onclick: () => this.setLoopTrail(),
+                textContent: this.translate("gl-pathControl.loopPoint"),
+              }
+        );
+        actionsPanelContainer.append(loopOrOneWayButton);
+      }
+
       this.selectedReferencePointIndex = referencePointsUnderMouse[0].properties!.index;
       this.actionsPanel
         .setLngLat(event.lngLat)
-        .setDOMContent(deleteButton)
+        .setDOMContent(actionsPanelContainer)
         .addTo(this.map!);
     }
   }
@@ -452,12 +526,23 @@ export default class MapboxPathControl implements IControl {
   }
 
   private movePointHandler(coordinates: number[]): void {
-    const previousLine = this.linesBetweenReferencePoints[
+    let previousLine = this.linesBetweenReferencePoints[
       this.selectedReferencePointIndex! - 1
     ];
-    const nextLine = this.linesBetweenReferencePoints[
+
+    if (!previousLine && this.isLoopTrail) {
+      previousLine = this.linesBetweenReferencePoints[
+        this.referencePoints.length - 1
+      ];
+    }
+
+    let nextLine = this.linesBetweenReferencePoints[
       this.selectedReferencePointIndex!
     ];
+
+    if (!nextLine && this.isLoopTrail) {
+      nextLine = this.linesBetweenReferencePoints[0];
+    }
 
     this.handleMapCursor("grabbing");
 
@@ -681,13 +766,26 @@ export default class MapboxPathControl implements IControl {
     this.map!.fire("MapboxPathControl.delete", {
       deletedPoint: this.referencePoints[this.selectedReferencePointIndex!],
     });
-    const previousLine = this.linesBetweenReferencePoints[
+
+    let previousLine = this.linesBetweenReferencePoints[
       this.selectedReferencePointIndex! - 1
     ];
-    const nextLine = this.linesBetweenReferencePoints[
+
+    if (!previousLine && this.isLoopTrail) {
+      previousLine = this.linesBetweenReferencePoints[
+        this.linesBetweenReferencePoints.length - 1
+      ];
+    }
+
+    let nextLine = this.linesBetweenReferencePoints[
       this.selectedReferencePointIndex!
     ];
-    if (this.selectedReferencePointIndex! === 0) {
+
+    if (!nextLine && this.isLoopTrail) {
+      nextLine = this.linesBetweenReferencePoints[0];
+    }
+
+    if (!previousLine) {
       this.referencePoints.shift();
       if (this.referencePoints.length > 0) {
         this.linesBetweenReferencePoints.shift();
@@ -696,29 +794,33 @@ export default class MapboxPathControl implements IControl {
             phantomJunctionLine.properties!.index !== nextLine.properties!.index
         );
       }
-      this.syncIndex();
-    } else if (
-      this.selectedReferencePointIndex! ===
-      this.referencePoints.length - 1
-    ) {
+    } else if (!nextLine) {
       this.referencePoints.splice(this.selectedReferencePointIndex!, 1);
       this.linesBetweenReferencePoints.splice(
         previousLine.properties!.index,
         1
       );
-      this.syncIndex();
       this.phantomJunctionLines = this.phantomJunctionLines.filter(
         (phantomJunctionLine) =>
           phantomJunctionLine.properties!.index !==
           previousLine.properties!.index
       );
     } else {
-      const previousPoint = this.referencePoints[
+      let previousPoint = this.referencePoints[
         this.selectedReferencePointIndex! - 1
       ];
-      const nextPoint = this.referencePoints[
+
+      if (!previousPoint && this.isLoopTrail) {
+        previousPoint = this.referencePoints[this.referencePoints.length - 1];
+      }
+
+      let nextPoint = this.referencePoints[
         this.selectedReferencePointIndex! + 1
       ];
+
+      if (!nextPoint && this.isLoopTrail) {
+        nextPoint = this.referencePoints[0];
+      }
 
       this.phantomJunctionLines = this.phantomJunctionLines.filter(
         (phantomJunctionLine) =>
@@ -778,8 +880,51 @@ export default class MapboxPathControl implements IControl {
       }
       this.referencePoints.splice(this.selectedReferencePointIndex!, 1);
       this.linesBetweenReferencePoints.splice(nextLine.properties!.index, 1);
-      this.syncIndex();
+
+      // Below 3 points, a lineString can no longer be looped
+      if (this.referencePoints.length < 3 && this.isLoopTrail) {
+        this.linesBetweenReferencePoints.splice(
+          previousLine.properties!.index -
+            Number(
+              this.selectedReferencePointIndex !== this.referencePoints.length
+            ),
+          1
+        );
+      }
     }
+
+    this.syncIndex();
+    this.updateSource();
+    this.actionsPanel.remove();
+  }
+
+  public async setLoopTrail(): Promise<void> {
+    if (this.referencePoints.length < 3) {
+      return;
+    }
+    const firstPoint = this.referencePoints[this.referencePoints.length - 1];
+    const lastPoint = this.referencePoints[0];
+
+    this.isLoopTrail = true;
+
+    await this.drawNewLine(
+      firstPoint.geometry.coordinates,
+      lastPoint.geometry.coordinates
+    );
+
+    this.referencePoints = this.referencePoints.slice(0, -1);
+    this.updateSource();
+
+    this.actionsPanel.remove();
+  }
+
+  public async setOneWayTrail(): Promise<void> {
+    this.createNewPointAndLine(this.referencePoints[0].geometry.coordinates);
+
+    this.selectedReferencePointIndex = this.referencePoints.length - 1;
+    this.isLoopTrail = false;
+
+    this.deletePoint();
 
     this.updateSource();
     this.actionsPanel.remove();
@@ -814,6 +959,9 @@ export default class MapboxPathControl implements IControl {
     this.referencePoints.forEach(
       (point, index) => (point.properties!.index = index)
     );
+    if (this.referencePoints.length < 3) {
+      this.isLoopTrail = false;
+    }
     this.linesBetweenReferencePoints.forEach((line, index) => {
       if (line.properties!.index !== index) {
         this.phantomJunctionLines.forEach((phantomJunctionLine) => {
@@ -834,7 +982,10 @@ export default class MapboxPathControl implements IControl {
   ): Promise<void> {
     let coordinates: number[][] | undefined = [];
     const previousPoint = this.referencePoints[line.properties!.index];
-    const nextPoint = this.referencePoints[line.properties!.index + 1];
+    let nextPoint = this.referencePoints[line.properties!.index + 1];
+    if (!nextPoint && this.isLoopTrail) {
+      nextPoint = this.referencePoints[0];
+    }
     if (line.properties!.isFollowingDirections && !forceDirections) {
       coordinates = [
         previousPoint.geometry.coordinates,
@@ -906,21 +1057,28 @@ export default class MapboxPathControl implements IControl {
       "Point"
     );
 
-    this.linesBetweenReferencePoints = this.filterFeaturesByTypeAndSortByIndex<
-      LineString
-    >(
-      features.filter(({ properties }) => !properties!.isPhantomJunction) as [],
+    const lines = this.filterFeaturesByTypeAndSortByIndex<LineString>(
+      features as [],
       "LineString"
     );
 
-    this.phantomJunctionLines = this.filterFeaturesByTypeAndSortByIndex<
-      LineString
-    >(
-      features.filter(({ properties }) => properties!.isPhantomJunction) as [],
-      "LineString"
+    this.linesBetweenReferencePoints = lines.filter(
+      ({ properties }) => !properties!.isPhantomJunction
     );
 
-    // In case the featureCollection contains only one LineString, it needs to set two Point at edges
+    this.phantomJunctionLines = lines.filter(
+      ({ properties }) => properties!.isPhantomJunction
+    );
+
+    if (
+      this.referencePoints.length > 2 &&
+      lines[lines.length - 1].geometry.coordinates[1].join() ===
+        this.referencePoints[0].geometry.coordinates.join()
+    ) {
+      this.isLoopTrail = true;
+    }
+
+    // In case of @the featureCollection contains only one LineString, it needs to set two Point at edges
     if (!this.referencePoints.length && !this.phantomJunctionLines.length) {
       this.referencePoints = getLineEnds(
         this.linesBetweenReferencePoints[0].geometry.coordinates
