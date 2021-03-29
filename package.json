@@ -15,6 +15,7 @@
     "@turf/helpers": "^6.3.0",
     "@turf/line-split": "^6.3.0",
     "@turf/nearest-point-on-line": "^6.3.0",
+    "@turf/point-to-line-distance": "^6.3.0",
     "lodash.debounce": "^4.0.8"
   },
   "peerDependencies": {
