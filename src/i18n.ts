@@ -30,4 +30,6 @@ export const defaultLocales = {
   "gl-pathControl.createPoint": "Create point",
   "gl-pathControl.createIntermediatePoint": "Create intermediate point",
   "gl-pathControl.deletePoint": "Delete point",
+  "gl-pathControl.loopPoint": "Round trip",
+  "gl-pathControl.oneWayPoint": "One way",
 };
