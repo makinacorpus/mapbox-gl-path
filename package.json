@@ -12,9 +12,9 @@
   "author": "bastien.alvez@makina-corpus.com",
   "license": "MIT",
   "dependencies": {
-    "@turf/helpers": "^6.2.0-alpha.2",
-    "@turf/line-split": "^6.2.0-alpha.2",
-    "@turf/nearest-point-on-line": "^6.2.0-alpha.2",
+    "@turf/helpers": "^6.3.0",
+    "@turf/line-split": "^6.3.0",
+    "@turf/nearest-point-on-line": "^6.3.0",
     "lodash.debounce": "^4.0.8"
   },
   "peerDependencies": {
