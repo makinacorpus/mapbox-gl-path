@@ -367,10 +367,10 @@ export default class MapboxPathControl implements IControl {
 
         this.createNewPointAndLine(
           nearestPointInLineString.geometry.coordinates,
-          newPoint.properties!.isFollowingDirections,
+          nearestLineString.properties!.isFollowingDirections,
           newLines.features[0].geometry!.coordinates,
           newLines.features[1].geometry!.coordinates,
-          nearestLineString?.properties!.index
+          nearestLineString.properties!.index
         );
 
         this.movePointHandler(newPointCoordinates);
