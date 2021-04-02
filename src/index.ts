@@ -1070,12 +1070,16 @@ export default class MapboxPathControl implements IControl {
       ({ properties }) => properties!.isPhantomJunction
     );
 
-    if (
-      this.referencePoints.length > 2 &&
-      lines[lines.length - 1].geometry.coordinates[1].join() ===
+    if (this.referencePoints.length > 2) {
+      const lastLineWithoutDeparture = [...lines]
+        .reverse()
+        .find((line) => line.properties!.isDeparture !== true);
+      if (
+        lastLineWithoutDeparture?.geometry.coordinates[1]?.join() ===
         this.referencePoints[0].geometry.coordinates.join()
-    ) {
-      this.isLoopTrail = true;
+      ) {
+        this.isLoopTrail = true;
+      }
     }
 
     // In case of @the featureCollection contains only one LineString, it needs to set two Point at edges
@@ -1121,6 +1125,10 @@ export default class MapboxPathControl implements IControl {
 
   public setLineString(feature: Feature<LineString>): void {
     const coordinates = [...feature.geometry.coordinates];
+
+    this.isLoopTrail =
+      coordinates.length > 2 &&
+      coordinates[0].join() === coordinates[coordinates.length - 1].join();
 
     // If there are no `points` properties to describe the lineString,
     // we create two points on the edges and assume the direction is enabled by its current state
@@ -1282,7 +1290,9 @@ export default class MapboxPathControl implements IControl {
     return {
       type: "Feature",
       geometry: {
-        coordinates,
+        coordinates: !this.isLoopTrail
+          ? coordinates
+          : [...coordinates, coordinates[0]],
         type: "LineString",
       },
       properties: {
