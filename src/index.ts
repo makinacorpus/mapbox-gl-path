@@ -657,20 +657,29 @@ export default class MapboxPathControl implements IControl {
           isFollowingDirections,
         },
       };
-      const phantomJunctionLine = this.phantomJunctionLines.find(
-        (phantomJunctionLine) =>
-          phantomJunctionLine.properties!.index === currentLineIndex &&
-          phantomJunctionLine.properties!.isDeparture === false
-      );
-      if (phantomJunctionLine) {
-        phantomJunctionLine.properties!.index = currentLineIndex! + 1;
-      }
+
+      this.linesBetweenReferencePoints.forEach((line) => {
+        const { index } = line.properties!;
+        if (index > currentLineIndex) {
+          line.properties!.index = index + 1;
+        }
+      });
 
       this.linesBetweenReferencePoints.splice(
         currentLineIndex + 1,
         0,
         nextLineBetweenReferencePoint
       );
+
+      this.phantomJunctionLines.forEach((phantomJunctionLine) => {
+        const { isDeparture, index } = phantomJunctionLine.properties!;
+        if (
+          (index === currentLineIndex && !isDeparture) ||
+          index > currentLineIndex
+        ) {
+          phantomJunctionLine.properties!.index = index + 1;
+        }
+      });
     }
 
     this.map!.fire("MapboxPathControl.create", {
