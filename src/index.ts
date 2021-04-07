@@ -1173,20 +1173,25 @@ export default class MapboxPathControl implements IControl {
           return memo;
         }
 
-        // We crawl the coordinates delimited by point to define each part of the lineString
-        const [lngTo, latTo] =
+        // We crawl the coordinates delimited by points to define each part of the lineString
+        const nextReferenceCoordinates =
           array[index + 1] || coordinates[coordinates.length - 1];
 
+        if (!Array.isArray(nextReferenceCoordinates)) {
+          return memo;
+        }
+
         const toIndex = coordinates.findIndex(
-          ([lng, lat]) => lng === Number(lngTo) && lat === Number(latTo)
+          (coords) => coords.join() === nextReferenceCoordinates.join()
         );
 
         // The usage of the destructive splice method is wanted to avoid false positive coordinates
         // if the whole lineString goes through min 2 times in the same path
-        const nextCoordinates = coordinates.splice(0, toIndex + 1 || 2, [
-          Number(lngTo),
-          Number(latTo),
-        ]);
+        const nextCoordinates = coordinates.splice(
+          0,
+          toIndex + 1 || 2,
+          nextReferenceCoordinates.map((item) => Number(item))
+        );
 
         const lastItem = memo[memo.length - 1];
 
