@@ -599,7 +599,7 @@ export default class MapboxPathControl implements IControl {
     isFollowingDirections?: boolean,
     previousLineCoordinates?: number[][],
     nextLineCoordinates?: number[][],
-    currentLineIndex?: number,
+    currentLineIndex: number = this.linesBetweenReferencePoints.length,
     waypoints?: Waypoints
   ): void {
     const referencePoint: Feature<Point> = {
@@ -611,11 +611,7 @@ export default class MapboxPathControl implements IControl {
       properties: { index: this.referencePoints.length },
     };
 
-    if (currentLineIndex !== undefined) {
-      this.referencePoints.splice(currentLineIndex + 1, 0, referencePoint);
-    } else {
-      this.referencePoints.push(referencePoint);
-    }
+    this.referencePoints.splice(currentLineIndex + 1, 0, referencePoint);
 
     if (previousLineCoordinates) {
       const previousLineBetweenReferencePoint: Feature<LineString> = {
@@ -625,10 +621,7 @@ export default class MapboxPathControl implements IControl {
           coordinates: previousLineCoordinates,
         },
         properties: {
-          index:
-            currentLineIndex !== undefined
-              ? currentLineIndex
-              : this.linesBetweenReferencePoints.length,
+          index: currentLineIndex,
           isFollowingDirections,
         },
       };
@@ -645,17 +638,11 @@ export default class MapboxPathControl implements IControl {
         );
       }
 
-      if (currentLineIndex !== undefined) {
-        this.linesBetweenReferencePoints.splice(
-          currentLineIndex,
-          1,
-          previousLineBetweenReferencePoint
-        );
-      } else {
-        this.linesBetweenReferencePoints.push(
-          previousLineBetweenReferencePoint
-        );
-      }
+      this.linesBetweenReferencePoints.splice(
+        currentLineIndex,
+        1,
+        previousLineBetweenReferencePoint
+      );
     }
 
     if (nextLineCoordinates) {
@@ -679,15 +666,11 @@ export default class MapboxPathControl implements IControl {
         phantomJunctionLine.properties!.index = currentLineIndex! + 1;
       }
 
-      if (currentLineIndex !== undefined) {
-        this.linesBetweenReferencePoints.splice(
-          currentLineIndex + 1,
-          0,
-          nextLineBetweenReferencePoint
-        );
-      } else {
-        this.linesBetweenReferencePoints.push(nextLineBetweenReferencePoint);
-      }
+      this.linesBetweenReferencePoints.splice(
+        currentLineIndex + 1,
+        0,
+        nextLineBetweenReferencePoint
+      );
     }
 
     this.map!.fire("MapboxPathControl.create", {
