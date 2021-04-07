@@ -581,13 +581,12 @@ export default class MapboxPathControl implements IControl {
         ];
       }
     }
-
-    this.updateSource();
   }
 
   private onMovePoint(event: MapMouseEvent): void {
     const eventCoordinates = getLngLat(event.lngLat);
     this.movePointHandler(eventCoordinates);
+    this.updateSource();
   }
 
   private onUpPoint(): void {
