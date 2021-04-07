@@ -1073,7 +1073,7 @@ export default class MapboxPathControl implements IControl {
       }
     }
 
-    // In case of @the featureCollection contains only one LineString, it needs to set two Point at edges
+    // In case of the featureCollection contains only one LineString, it needs to set two Point at edges
     if (!this.referencePoints.length && !this.phantomJunctionLines.length) {
       this.referencePoints = getLineEnds(
         this.linesBetweenReferencePoints[0].geometry.coordinates
@@ -1144,9 +1144,9 @@ export default class MapboxPathControl implements IControl {
         ) =>
           Array.isArray(nextCoordinates) &&
           !(
-            (array[index - 1] === "junction" &&
+            (array[index - 1] === "junctionDeparture" &&
               array[index + 1] === "direction") ||
-            (array[index + 1] === "junction" &&
+            (array[index + 1] === "junctionArrival" &&
               array[index - 1] === "direction")
           )
       )
@@ -1188,17 +1188,16 @@ export default class MapboxPathControl implements IControl {
           Number(latTo),
         ]);
 
-        const isPrevItemFollowingDirection = memo[memo.length - 1]?.properties!
-          .isFollowingDirections;
+        const lastItem = memo[memo.length - 1];
 
         // phantomJunction and point related to a lineString must have the same index
-        const prevIndex = memo[memo.length - 1]?.properties!.index || 0;
+        const prevIndex = lastItem?.properties!.index ?? -1;
         const nextIndex =
           prevIndex +
           Number(
-            (isPrevItemFollowingDirection !== true && item === "junction") ||
-              (isPrevItemFollowingDirection === undefined &&
-                memo[memo.length - 1]?.properties!.isDeparture === false)
+            item === "junctionDeparture" ||
+              (["free", "direction"].includes(item) &&
+                lastItem?.properties!.isDeparture !== true)
           );
 
         memo.push({
@@ -1209,12 +1208,12 @@ export default class MapboxPathControl implements IControl {
           },
           properties: {
             index: nextIndex,
-            ...(item !== "junction" && {
+            ...(!item.startsWith("junction") && {
               isFollowingDirections: item === "direction",
             }),
-            ...(item === "junction" && {
+            ...(item.startsWith("junction") && {
               isPhantomJunction: true,
-              isDeparture: isPrevItemFollowingDirection !== true,
+              isDeparture: item === "junctionDeparture",
             }),
           },
         });
@@ -1263,7 +1262,11 @@ export default class MapboxPathControl implements IControl {
 
               lineStringify.coordinates.push(phantomJunctionCoordinateToPush);
               lineStringify.points.push(phantomJunctionCoordinateToPush);
-              lineStringify.paths.push("junction");
+              lineStringify.paths.push(
+                `junction${
+                  feature.properties!.isDeparture ? "Departure" : "Arrival"
+                }`
+              );
             } else if (feature.properties!.isFollowingDirections) {
               lineStringify.paths.push("direction");
             } else {
