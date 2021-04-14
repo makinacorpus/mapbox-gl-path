@@ -19,7 +19,7 @@ import {
   phantomJunctionLineLayerId,
 } from "./source-and-layers";
 import { translateMock, defaultLocales } from "./i18n";
-import { createElement, getLineEnds, getLngLat } from "./utils";
+import { createElement, getLngLat } from "./utils";
 import "./mapbox-gl-path.css";
 
 interface DirectionsTheme {
@@ -1073,30 +1073,10 @@ export default class MapboxPathControl implements IControl {
       }
     }
 
-    // In case of the featureCollection contains only one LineString, it needs to set two Point at edges
+    // In case of the featureCollection contains only one LineString
     if (!this.referencePoints.length && !this.phantomJunctionLines.length) {
-      this.referencePoints = getLineEnds(
-        this.linesBetweenReferencePoints[0].geometry.coordinates
-      ).map((point, index) => ({
-        type: "Feature",
-        geometry: {
-          type: "Point",
-          coordinates: point,
-        },
-        properties: {
-          index,
-        },
-      }));
-      this.linesBetweenReferencePoints = this.linesBetweenReferencePoints.map(
-        (line, index) => ({
-          ...line,
-          properties: {
-            index,
-            isFollowingDirections: this.isFollowingDirections,
-            ...line.properties,
-          },
-        })
-      );
+      this.setLineString(this.linesBetweenReferencePoints[0]);
+      return;
     }
 
     this.syncIndex();
