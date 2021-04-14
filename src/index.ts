@@ -1305,6 +1305,7 @@ export default class MapboxPathControl implements IControl {
     this.referencePoints = [];
     this.linesBetweenReferencePoints = [];
     this.phantomJunctionLines = [];
+    this.isLoopTrail = false;
     this.updateSource(false);
   }
 
