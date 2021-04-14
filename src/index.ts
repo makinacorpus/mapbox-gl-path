@@ -1129,6 +1129,18 @@ export default class MapboxPathControl implements IControl {
       coordinates[coordinates.length - 1],
     ];
 
+    // And if it's a loop trail, 2 intermediates points are required
+    if (this.isLoopTrail) {
+      defaultReference.splice(
+        2,
+        1,
+        coordinates[Math.round((coordinates.length * 1) / 3)],
+        this.isFollowingDirections ? "direction" : "free",
+        coordinates[Math.round((coordinates.length * 2) / 3)],
+        this.isFollowingDirections ? "direction" : "free"
+      );
+    }
+
     const referenceToBuildFeatureLineString =
       feature.properties!.points?.flatMap((item: Number[][], index: number) =>
         [item, feature.properties!.paths[index]].filter(Boolean)
