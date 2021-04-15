@@ -61,7 +61,7 @@ A feature of Linestring type (only applied if `featureCollection` parameter is n
 Some properties can describe section of points and phantom junction
 
 - `path: string[]` : a collection of string describing each junction. Values can be `free`, `direction` or `junction`
-- `points: number[]` : a collection of all coordinates points between each junction
+- `points: number[]` : a collection of indexes of the lineString defining points between each junction
   If there are no properties, Mapbox-gl-path create two points at the edge of the lineString and determine if the path is following direction if `directionsTheme` is defined and `isFollowingDirections` is equal at `true`.
 
 Point
