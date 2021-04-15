@@ -53,7 +53,7 @@ interface Parameters {
 interface LineStringify {
   coordinates: number[][];
   paths: string[];
-  points: number[][];
+  points: number[];
 }
 
 export default class MapboxPathControl implements IControl {
@@ -1104,9 +1104,9 @@ export default class MapboxPathControl implements IControl {
     // If there are no `points` properties to describe the lineString,
     // we create two points on the edges and assume the direction is enabled by its current state
     const defaultReference = [
-      coordinates[0],
+      0,
       this.isFollowingDirections ? "direction" : "free",
-      coordinates[coordinates.length - 1],
+      coordinates.length - 1,
     ];
 
     // And if it's a loop trail, 2 intermediates points are required
@@ -1114,27 +1114,29 @@ export default class MapboxPathControl implements IControl {
       defaultReference.splice(
         2,
         1,
-        coordinates[Math.round((coordinates.length * 1) / 3)],
+        Math.round((coordinates.length * 1) / 3),
         this.isFollowingDirections ? "direction" : "free",
-        coordinates[Math.round((coordinates.length * 2) / 3)],
+        Math.round((coordinates.length * 2) / 3),
         this.isFollowingDirections ? "direction" : "free"
       );
     }
 
     const referenceToBuildFeatureLineString =
       feature.properties!.points?.flatMap((item: Number[][], index: number) =>
-        [item, feature.properties!.paths[index]].filter(Boolean)
+        [item, feature.properties!.paths[index]].filter(
+          (value) => value !== undefined
+        )
       ) ?? defaultReference;
 
     const points = referenceToBuildFeatureLineString
       // Filter removing `points` between route and phantom junction
       .filter(
         (
-          nextCoordinates: Number[],
+          indexedCoordinates: number,
           index: number,
-          array: Number[] | String[]
+          array: number[] | string[]
         ) =>
-          Array.isArray(nextCoordinates) &&
+          Number.isFinite(indexedCoordinates) &&
           !(
             (array[index - 1] === "junctionDeparture" &&
               array[index + 1] === "direction") ||
@@ -1143,10 +1145,10 @@ export default class MapboxPathControl implements IControl {
           )
       )
       // Build all points
-      .map((nextCoordinates: Number[], index: number) => ({
+      .map((indexedCoordinates: number, index: number) => ({
         type: "Feature",
         geometry: {
-          coordinates: nextCoordinates,
+          coordinates: coordinates[indexedCoordinates],
           type: "Point",
         },
         properties: {
@@ -1157,34 +1159,18 @@ export default class MapboxPathControl implements IControl {
     const lines = referenceToBuildFeatureLineString.reduce(
       (
         memo: [GeoJSON.Feature],
-        item: string | [],
+        item: string | number,
         index: number,
-        array: [string | []]
+        array: [string | number]
       ) => {
         if (typeof item !== "string") {
           return memo;
         }
+        const fromIndex = Number(array[index - 1] ?? 0);
+        const toIndex = Number(array[index + 1] ?? coordinates.length - 1);
 
-        // We crawl the coordinates delimited by points to define each part of the lineString
-        const nextReferenceCoordinates =
-          array[index + 1] || coordinates[coordinates.length - 1];
-
-        if (!Array.isArray(nextReferenceCoordinates)) {
-          return memo;
-        }
-
-        const toIndex = coordinates.findIndex(
-          (coords) => coords.join() === nextReferenceCoordinates.join()
-        );
-
-        // The usage of the destructive splice method is wanted to avoid false positive coordinates
-        // if the whole lineString goes through min 2 times in the same path
-        const nextCoordinates = coordinates.splice(
-          0,
-          toIndex + 1 || 2,
-          nextReferenceCoordinates.map((item) => Number(item))
-        );
-
+        // Second param of slice method is a count
+        const nextCoordinates = coordinates.slice(fromIndex, toIndex + 1);
         const lastItem = memo[memo.length - 1];
 
         // phantomJunction and point related to a lineString must have the same index
@@ -1242,23 +1228,27 @@ export default class MapboxPathControl implements IControl {
       .reduce(
         (lineStringify: LineStringify, feature) => {
           if (feature.geometry.type === "Point") {
-            lineStringify.points.push(feature.geometry.coordinates);
             lineStringify.coordinates.push(feature.geometry.coordinates);
+            lineStringify.points.push(lineStringify.coordinates.length - 1);
           }
           if (feature.geometry.type === "LineString") {
+            if (feature.properties!.isDeparture === false) {
+              lineStringify.points.push(lineStringify.coordinates.length);
+            }
             lineStringify.coordinates.push(
               // Remove the first and last item because we already got them with the push of points
               ...feature.geometry.coordinates.slice(1, -1)
             );
+            if (feature.properties!.isDeparture === true) {
+              lineStringify.points.push(lineStringify.coordinates.length);
+            }
             if (feature.properties!.isPhantomJunction) {
               // If the phantomJunction is departure, we push the first one if not the second
-              const phantomJunctionCoordinateToPush =
+              lineStringify.coordinates.push(
                 feature.geometry.coordinates[
                   Number(feature.properties!.isDeparture)
-                ];
-
-              lineStringify.coordinates.push(phantomJunctionCoordinateToPush);
-              lineStringify.points.push(phantomJunctionCoordinateToPush);
+                ]
+              );
               lineStringify.paths.push(
                 `junction${
                   feature.properties!.isDeparture ? "Departure" : "Arrival"
