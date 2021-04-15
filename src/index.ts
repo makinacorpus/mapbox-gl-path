@@ -19,7 +19,7 @@ import {
   phantomJunctionLineLayerId,
 } from "./source-and-layers";
 import { translateMock, defaultLocales } from "./i18n";
-import { createElement, getLngLat } from "./utils";
+import { createElement } from "./utils";
 import "./mapbox-gl-path.css";
 
 interface DirectionsTheme {
@@ -338,10 +338,10 @@ export default class MapboxPathControl implements IControl {
     );
 
     if (!referencePointOrLineIsUnderMouse) {
-      const newPointCoordinates = getLngLat(event.lngLat);
+      const newPointCoordinates = event.lngLat.toArray();
 
       if (this.isLoopTrail) {
-        const newPoint: Feature<Point> = point(getLngLat(event.lngLat));
+        const newPoint: Feature<Point> = point(newPointCoordinates);
 
         let nearestLineString = this.linesBetweenReferencePoints[0];
         this.linesBetweenReferencePoints.slice(1).forEach((line) => {
@@ -584,7 +584,7 @@ export default class MapboxPathControl implements IControl {
   }
 
   private onMovePoint(event: MapMouseEvent): void {
-    const eventCoordinates = getLngLat(event.lngLat);
+    const eventCoordinates = event.lngLat.toArray();
     this.movePointHandler(eventCoordinates);
     this.updateSource();
   }
@@ -699,7 +699,7 @@ export default class MapboxPathControl implements IControl {
       const currentLineString: Feature<LineString> = lineString(
         lineUnderMouse[0].geometry.coordinates
       );
-      const currentPoint: Feature<Point> = point(getLngLat(event.lngLat));
+      const currentPoint: Feature<Point> = point(event.lngLat.toArray());
       const nearestPoint: Feature<Point> = nearestPointOnLine(
         currentLineString,
         currentPoint
@@ -733,7 +733,7 @@ export default class MapboxPathControl implements IControl {
       const currentLineString: Feature<LineString> = lineString(
         lineUnderMouse[0].geometry.coordinates
       );
-      const currentPoint: Feature<Point> = point(getLngLat(event.lngLat));
+      const currentPoint: Feature<Point> = point(event.lngLat.toArray());
       const nearestPoint: Feature<Point> = nearestPointOnLine(
         currentLineString,
         currentPoint
