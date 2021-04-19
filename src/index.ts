@@ -10,10 +10,9 @@ import {
   pointsAndLinesSource,
   pointCircleLayerId,
   betweenPointsLineLayerId,
-  referencePointsCircleLayer,
-  referencePointsTextLayer,
-  betweenPointsLineLayer,
-  phantomJunctionLineLayer,
+  defaultPointLayerList,
+  defaultLineLayerList,
+  defaultPhantomJunctionLineLayerList,
   LayersCustomisation,
   pointTextLayerId,
   phantomJunctionLineLayerId,
@@ -221,44 +220,58 @@ export default class MapboxPathControl implements IControl {
 
   private initializeSourceAndLayers(): void {
     this.map!.addSource(sourcePointAndLineId, pointsAndLinesSource);
-    this.map!.addLayer(
-      this.layersCustomisation &&
-        this.layersCustomisation.pointCircleLayerCustomisation
-        ? {
-            ...referencePointsCircleLayer,
-            ...this.layersCustomisation.pointCircleLayerCustomisation,
-          }
-        : referencePointsCircleLayer
-    );
-    this.map!.addLayer(
-      this.layersCustomisation &&
-        this.layersCustomisation.pointTextLayerCustomisation
-        ? {
-            ...referencePointsTextLayer,
-            ...this.layersCustomisation.pointTextLayerCustomisation,
-          }
-        : referencePointsTextLayer
-    );
-    this.map!.addLayer(
-      this.layersCustomisation &&
-        this.layersCustomisation.lineLayerCustomisation
-        ? {
-            ...betweenPointsLineLayer,
-            ...this.layersCustomisation.lineLayerCustomisation,
-          }
-        : betweenPointsLineLayer,
-      pointCircleLayerId
-    );
-    this.map!.addLayer(
-      this.layersCustomisation &&
-        this.layersCustomisation.phantomJunctionLineLayerCustomisation
-        ? {
-            ...phantomJunctionLineLayer,
-            ...this.layersCustomisation.phantomJunctionLineLayerCustomisation,
-          }
-        : phantomJunctionLineLayer,
-      pointCircleLayerId
-    );
+    const {
+      lineLayerList = defaultLineLayerList,
+      phantomJunctionLineLayerList = defaultPhantomJunctionLineLayerList,
+      pointLayerList = defaultPointLayerList,
+    } = this.layersCustomisation || {};
+
+    const groupLayerList = [
+      {
+        baseId: betweenPointsLineLayerId,
+        layerList: lineLayerList,
+        props: {
+          filter: [
+            "all",
+            ["in", "$type", "LineString"],
+            ["!has", "isPhantomJunction"],
+          ],
+          type: "line",
+        },
+      },
+      {
+        baseId: phantomJunctionLineLayerId,
+        layerList: phantomJunctionLineLayerList,
+        props: {
+          filter: [
+            "all",
+            ["in", "$type", "LineString"],
+            ["has", "isPhantomJunction"],
+          ],
+          type: "line",
+        },
+      },
+      {
+        baseId: pointCircleLayerId,
+        layerList: pointLayerList,
+        props: {
+          filter: ["in", "$type", "Point"],
+          type: "circle",
+        },
+      },
+    ];
+    groupLayerList.forEach(({ baseId, layerList, props }) => {
+      layerList.forEach((layer: any, index: number) => {
+        // The first layer must have the ID without suffix or override to apply its interactions
+        const id = index === 0 ? baseId : layer.id || `${baseId}-${index}`;
+        this.map!.addLayer({
+          source: sourcePointAndLineId,
+          ...props,
+          ...layer,
+          id,
+        });
+      });
+    });
   }
 
   private initializeEvents(): void {
