@@ -32,25 +32,33 @@ export default [
           const content = `<div id="map" style="width: 100vw; height: 100vh;"></div>`;
           const scriptMapbox = `<script src="https://api.mapbox.com/mapbox-gl-js/v1.12.0/mapbox-gl.js"></script>`;
           const layersCustomisation = `{
-            pointCircleLayerCustomisation: {
+            pointLayerList: [{
               paint: {
                 "circle-radius": 10,
                 "circle-color": "#FFFFFF",
                 "circle-stroke-width": 1,
                 "circle-stroke-color": "#0D47A1",
               },
-            },
-            pointTextLayerCustomisation: { paint: { "text-color": "#B71C1C" } },
-            lineLayerCustomisation: {
+            }, {
+              paint: {
+                "text-color": "#B71C1C"
+              },
+              type: "symbol",
+              layout: {
+                "text-field": ["to-string", ["+", ["get", "index"], 1]],
+                "text-allow-overlap": true,
+              },
+            }],
+            lineLayerList: [{
               paint: { "line-width": 10, "line-color": "#0D47A1" },
-            },
-            phantomJunctionLineLayerCustomisation: {
+            }],
+            phantomJunctionLineLayerList: [{
               paint: {
                 "line-width": 10,
                 "line-color": "#0D47A1",
                 "line-dasharray": [1, 1],
               },
-            },
+            }],
           }`;
           const featureCollection = `undefined`;
           const directionsThemes = `[{

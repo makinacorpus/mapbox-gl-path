@@ -38,15 +38,16 @@ const featureCollection = mapboxPathControl.getFeatureCollection();
 
 ```
 LayersCustomisation {
-  pointCircleLayerCustomisation: LayerCustomisation;
-  pointTextLayerCustomisation: LayerCustomisation;
-  lineLayerCustomisation: LayerCustomisation;
-  phantomJunctionLineLayerCustomisation: LayerCustomisation;
+  pointLayerList: LayerCustomisation;
+  lineLayerList: LayerCustomisation;
+  phantomJunctionLineLayerList: LayerCustomisation;
 }
 
 LayerCustomisation {
+  id: string | undefined;
   layout: AnyLayout;
   paint: AnyPaint;
+  type: string | undefined;
 }
 ```
 
