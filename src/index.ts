@@ -47,6 +47,7 @@ interface Parameters {
   directionsThemes: DirectionsTheme[] | undefined;
   isLoopTrail: boolean | undefined;
   translate: Function | undefined;
+  useRightClickToHandleActionPanel: boolean | undefined;
 }
 
 interface LineStringify {
@@ -63,13 +64,14 @@ export default class MapboxPathControl implements IControl {
   private selectedReferencePointIndex: number | undefined;
   private linesBetweenReferencePoints: Feature<LineString>[] = [];
   private phantomJunctionLines: Feature<LineString>[] = [];
+  private useRightClickToHandleActionPanel: Boolean | undefined;
   private onMovePointFunction = (event: MapMouseEvent) =>
     this.onMovePoint(event);
 
   private onClickMapFunction = (event: MapMouseEvent) => this.onClickMap(event);
 
   private onContextMenuMapFunction = (event: MapMouseEvent) =>
-    this.onContextMenuMap(event);
+    this.handleActionsPanel(event);
 
   private onMouseDownPointFunction = (event: MapMouseEvent) =>
     this.onMouseDownPoint(event);
@@ -101,6 +103,7 @@ export default class MapboxPathControl implements IControl {
         featureCollection,
         lineString,
         translate,
+        useRightClickToHandleActionPanel,
       } = parameters;
 
       this.translate = translate || translateMock(defaultLocales);
@@ -113,6 +116,10 @@ export default class MapboxPathControl implements IControl {
       }
 
       this.layersCustomisation = layersCustomisation;
+
+      this.useRightClickToHandleActionPanel = Boolean(
+        useRightClickToHandleActionPanel
+      );
 
       if (featureCollection) {
         this.setFeatureCollection(featureCollection);
@@ -276,7 +283,9 @@ export default class MapboxPathControl implements IControl {
 
   private initializeEvents(): void {
     this.map!.on("click", this.onClickMapFunction);
-    this.map!.on("contextmenu", this.onContextMenuMapFunction);
+    if (this.useRightClickToHandleActionPanel) {
+      this.map!.on("contextmenu", this.onContextMenuMapFunction);
+    }
     this.map!.on(
       "mousedown",
       pointCircleLayerId,
@@ -344,6 +353,10 @@ export default class MapboxPathControl implements IControl {
       return;
     }
 
+    if (!this.useRightClickToHandleActionPanel) {
+      this.handleActionsPanel(event);
+    }
+
     const referencePointOrLineIsUnderMouse: boolean = Boolean(
       this.map!.queryRenderedFeatures(event.point, {
         layers: [pointCircleLayerId, betweenPointsLineLayerId],
@@ -409,7 +422,7 @@ export default class MapboxPathControl implements IControl {
     }
   }
 
-  private onContextMenuMap(event: MapMouseEvent): void {
+  private handleActionsPanel(event: MapMouseEvent): void {
     const featuresUnderMouse = this.map!.queryRenderedFeatures(event.point, {
       layers: [pointCircleLayerId, betweenPointsLineLayerId],
     });
@@ -418,12 +431,14 @@ export default class MapboxPathControl implements IControl {
       featuresUnderMouse.find(
         (feature) => feature.layer.id === pointCircleLayerId
       )
-        ? this.onContextMenuPoint(event)
-        : this.onContextMenuLine(event);
+        ? this.handleActionsPanelMenuPoint(event)
+        : this.handleActionsPanelMenuLine(event);
+
+      return;
     }
   }
 
-  private onContextMenuPoint(event: MapMouseEvent): void {
+  private handleActionsPanelMenuPoint(event: MapMouseEvent): void {
     event.preventDefault();
 
     const referencePointsUnderMouse = this.map!.queryRenderedFeatures(
@@ -478,7 +493,7 @@ export default class MapboxPathControl implements IControl {
     }
   }
 
-  private onContextMenuLine(event: MapMouseEvent): void {
+  private handleActionsPanelMenuLine(event: MapMouseEvent): void {
     const createPointOnLineButton = createElement("button", {
       className:
         "mapbox-gl-path-popup-button mapbox-gl-path-popup-createPointOnLine",
