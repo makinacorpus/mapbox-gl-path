@@ -63,13 +63,15 @@ export default class MapboxPathControl implements IControl {
   private referencePoints: Feature<Point>[] = [];
   private selectedReferencePointIndex: number | undefined;
   private layerIDList: string[] = [];
+  private enqueueEvents: Function[] = [];
   private linesBetweenReferencePoints: Feature<LineString>[] = [];
   private phantomJunctionLines: Feature<LineString>[] = [];
   private useRightClickToHandleActionPanel: Boolean | undefined;
   private onMovePointFunction = (event: MapMouseEvent) =>
     this.onMovePoint(event);
 
-  private onClickMapFunction = (event: MapMouseEvent) => this.onClickMap(event);
+  private onClickMapFunction = (event: MapMouseEvent) =>
+    this.onClickMapEnqueue(event);
 
   private onContextMenuMapFunction = (event: MapMouseEvent) =>
     this.handleActionsPanel(event);
@@ -345,7 +347,22 @@ export default class MapboxPathControl implements IControl {
     this.map!.getCanvas().style.cursor = cursor;
   }
 
-  private async onClickMap(event: MapMouseEvent): Promise<void> {
+  private async onClickMapEnqueue(event: MapMouseEvent): Promise<void> {
+    this.enqueueEvents.push(
+      async (): Promise<void> => {
+        await this.handleClickMap(event);
+        this.enqueueEvents.shift();
+        if (this.enqueueEvents.length !== 0) {
+          await this.enqueueEvents[0]();
+        }
+      }
+    );
+    if (this.enqueueEvents.length === 1) {
+      await this.enqueueEvents[0]();
+    }
+  }
+
+  private async handleClickMap(event: MapMouseEvent): Promise<void> {
     if (this.actionsPanel.isOpen()) {
       this.actionsPanel.remove();
       return;
@@ -361,62 +378,64 @@ export default class MapboxPathControl implements IControl {
       }).length
     );
 
-    if (!referencePointOrLineIsUnderMouse) {
-      const newPointCoordinates = event.lngLat.toArray();
+    if (referencePointOrLineIsUnderMouse) {
+      return;
+    }
 
-      if (this.isLoopTrail) {
-        const newPoint: Feature<Point> = point(newPointCoordinates);
+    const newPointCoordinates = event.lngLat.toArray();
 
-        let nearestLineString = this.linesBetweenReferencePoints[0];
-        this.linesBetweenReferencePoints.slice(1).forEach((line) => {
-          const currentDistance = pointToLineDistance(
-            newPoint,
-            nearestLineString
-          );
-          const newDistance = pointToLineDistance(newPoint, line);
-          if (newDistance < currentDistance) {
-            nearestLineString = line;
-          }
-        });
+    if (this.isLoopTrail) {
+      const newPoint: Feature<Point> = point(newPointCoordinates);
 
-        const nearestPointInLineString: Feature<Point> = nearestPointOnLine(
-          nearestLineString,
-          newPoint
+      let nearestLineString = this.linesBetweenReferencePoints[0];
+      this.linesBetweenReferencePoints.slice(1).forEach((line) => {
+        const currentDistance = pointToLineDistance(
+          newPoint,
+          nearestLineString
         );
+        const newDistance = pointToLineDistance(newPoint, line);
+        if (newDistance < currentDistance) {
+          nearestLineString = line;
+        }
+      });
 
-        const newLines = lineSplit(nearestLineString, nearestPointInLineString);
+      const nearestPointInLineString: Feature<Point> = nearestPointOnLine(
+        nearestLineString,
+        newPoint
+      );
 
-        this.selectedReferencePointIndex =
-          nearestLineString.properties!.index + 1;
+      const newLines = lineSplit(nearestLineString, nearestPointInLineString);
 
-        this.createNewPointAndLine(
-          nearestPointInLineString.geometry.coordinates,
-          nearestLineString.properties!.isFollowingDirections,
-          newLines.features[0].geometry!.coordinates,
-          newLines.features[1].geometry!.coordinates,
-          nearestLineString.properties!.index
-        );
+      this.selectedReferencePointIndex =
+        nearestLineString.properties!.index + 1;
 
-        this.movePointHandler(newPointCoordinates);
+      this.createNewPointAndLine(
+        nearestPointInLineString.geometry.coordinates,
+        nearestLineString.properties!.isFollowingDirections,
+        newLines.features[0].geometry!.coordinates,
+        newLines.features[1].geometry!.coordinates,
+        nearestLineString.properties!.index
+      );
 
-        this.syncIndex();
-        this.updateSource();
+      this.movePointHandler(newPointCoordinates);
 
-        return;
-      }
-      const previousReferencePoint: Feature<Point> | null =
-        this.referencePoints.length > 0
-          ? this.referencePoints[this.referencePoints.length - 1]
-          : null;
+      this.syncIndex();
+      this.updateSource();
 
-      if (previousReferencePoint) {
-        this.drawNewLine(
-          previousReferencePoint.geometry.coordinates,
-          newPointCoordinates
-        );
-      } else {
-        this.createNewPointAndLine(newPointCoordinates);
-      }
+      return;
+    }
+    const previousReferencePoint: Feature<Point> | null =
+      this.referencePoints.length > 0
+        ? this.referencePoints[this.referencePoints.length - 1]
+        : null;
+
+    if (previousReferencePoint) {
+      await this.drawNewLine(
+        previousReferencePoint.geometry.coordinates,
+        newPointCoordinates
+      );
+    } else {
+      this.createNewPointAndLine(newPointCoordinates);
     }
   }
 
@@ -870,7 +889,6 @@ export default class MapboxPathControl implements IControl {
         const directionsResponse = await this.selectedDirectionsTheme!.getPathByCoordinates(
           [previousPoint.geometry.coordinates, nextPoint.geometry.coordinates]
         );
-
         this.linesBetweenReferencePoints[
           previousLine.properties!.index
         ]!.geometry.coordinates =
