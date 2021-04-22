@@ -62,6 +62,7 @@ export default class MapboxPathControl implements IControl {
   private pathControl: HTMLElement | undefined;
   private referencePoints: Feature<Point>[] = [];
   private selectedReferencePointIndex: number | undefined;
+  private layerIDList: string[] = [];
   private linesBetweenReferencePoints: Feature<LineString>[] = [];
   private phantomJunctionLines: Feature<LineString>[] = [];
   private useRightClickToHandleActionPanel: Boolean | undefined;
@@ -140,16 +141,12 @@ export default class MapboxPathControl implements IControl {
   public onRemove(): void {
     this.map!.off("idle", this.configureMap);
     this.removeEvents();
-    [
-      pointCircleLayerId,
-      pointTextLayerId,
-      betweenPointsLineLayerId,
-      phantomJunctionLineLayerId,
-    ].forEach((layer) => {
-      if (this.map!.getLayer(layer)) {
-        this.map!.removeLayer(layer);
+    this.layerIDList.forEach((layerId) => {
+      if (this.map!.getLayer(layerId)) {
+        this.map!.removeLayer(layerId);
       }
     });
+    this.layerIDList = [];
     if (this.map!.getSource(sourcePointAndLineId)) {
       this.map!.removeSource(sourcePointAndLineId);
     }
@@ -277,6 +274,7 @@ export default class MapboxPathControl implements IControl {
           ...layer,
           id,
         });
+        this.layerIDList.push(id);
       });
     });
   }
