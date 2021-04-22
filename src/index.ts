@@ -1244,10 +1244,14 @@ export default class MapboxPathControl implements IControl {
       .sort((a, b) => {
         if (
           a.geometry.type === "LineString" &&
-          a.properties!.index === b.properties!.index &&
-          b.properties!.isDeparture === true
+          a.properties!.index === b.properties!.index
         ) {
-          return 1;
+          if (a.properties!.isDeparture === true) {
+            return -1;
+          } else if (b.properties!.isDeparture === true) {
+            return 1;
+          }
+          return 0;
         }
         return a.properties!.index - b.properties!.index;
       })
