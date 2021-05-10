@@ -4,7 +4,7 @@ type TranslationsKeys = {
 
 type Params =
   | {
-      context: string | undefined;
+      [key in string]: string;
     }
   | undefined;
 
@@ -14,11 +14,21 @@ type Params =
  */
 export const translateMock = (translationsKeys: TranslationsKeys = {}) => (
   key: string,
-  params: Params
+  params: Params = {}
 ) => {
   let targetedKey = translationsKeys[key] || key;
-  if (params?.context) {
-    targetedKey = translationsKeys[`${key}_${params.context}`];
+  const paramsAsArray = Object.entries(params);
+  if (paramsAsArray.length > 0) {
+    paramsAsArray.forEach(
+      ([key, value]) =>
+        (targetedKey = targetedKey.replace(
+          new RegExp(`{{${key}}}`, "g"),
+          value
+        ))
+    );
+    if (params.context) {
+      targetedKey = translationsKeys[`${key}_${params.context}`];
+    }
   }
   return targetedKey;
 };
