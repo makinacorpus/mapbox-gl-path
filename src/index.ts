@@ -540,7 +540,9 @@ export default class MapboxPathControl implements IControl {
           "mapbox-gl-path-popup-button mapbox-gl-path-popup-changePathModeOnLine",
         onclick: () => this.changeDirectionsModeOnLine(lineUnderMouse[0]),
         textContent: !lineUnderMouse[0].properties!.isFollowingDirections
-          ? this.translate("gl-pathControl.enableFollowDirectionMode")
+          ? this.translate("gl-pathControl.enableFollowDirectionMode", {
+              theme: this.selectedDirectionsTheme!.name,
+            })
           : this.translate("gl-pathControl.disableFollowDirectionMode"),
       });
       actionsPanelContainer.append(changePathModeOnLineButton);
