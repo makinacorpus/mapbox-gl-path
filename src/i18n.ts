@@ -35,7 +35,8 @@ export const translateMock = (translationsKeys: TranslationsKeys = {}) => (
 
 export const defaultLocales = {
   "gl-pathControl.followDirection": "Follow direction",
-  "gl-pathControl.enableFollowDirectionMode": "Enable direction",
+  "gl-pathControl.enableFollowDirectionMode":
+    "Enable direction with: {{theme}}",
   "gl-pathControl.disableFollowDirectionMode": "Disable direction",
   "gl-pathControl.createPoint": "Create point",
   "gl-pathControl.createIntermediatePoint": "Create intermediate point",
