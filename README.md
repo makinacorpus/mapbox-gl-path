@@ -29,6 +29,7 @@ const featureCollection = mapboxPathControl.getFeatureCollection();
   layersCustomisation: LayersCustomisation | undefined;
   featureCollection: GeoJSON.FeatureCollection<GeoJSON.Geometry> | undefined;
   directionsThemes: DirectionsTheme[] | undefined;
+  themeSelectionType: ThemeSelectionType | undefined;
   useRightClickToHandleActionPanel: boolean | undefined;
 }
 ```
@@ -118,6 +119,7 @@ Waypoints {
 getPathByCoordinates function return a object of type DirectionsThemeResponse with the coordinates between two points and waypoints, if necessary, to create phantomJunction lines between waypoints and points
 
 - useRightClickToHandleActionPanel - `boolean | undefined` determine if the user should use the left or right click to handle the action panel
+- themeSelectionType - `"select" | "radioList"` UI to choose the theme. Default value is `"radioList"`
 
 ### METHODS
 

@@ -14,14 +14,13 @@ import {
   defaultLineLayerList,
   defaultPhantomJunctionLineLayerList,
   LayersCustomisation,
-  pointTextLayerId,
   phantomJunctionLineLayerId,
 } from "./source-and-layers";
 import { translateMock, defaultLocales } from "./i18n";
-import { createElement } from "./utils";
+import { createElement, selectThemesElement } from "./utils";
 import "./mapbox-gl-path.css";
 
-interface DirectionsTheme {
+export interface DirectionsTheme {
   id: number;
   name: string;
   selected: boolean;
@@ -40,12 +39,14 @@ interface Waypoints {
   arrival: number[];
 }
 
+export type ThemeSelectionType = "select" | "radioList";
+
 interface Parameters {
   layersCustomisation: LayersCustomisation | undefined;
   featureCollection: GeoJSON.FeatureCollection<GeoJSON.Geometry> | undefined;
   lineString: GeoJSON.Feature<LineString> | undefined;
   directionsThemes: DirectionsTheme[] | undefined;
-  isLoopTrail: boolean | undefined;
+  themeSelectionType: ThemeSelectionType | undefined;
   translate: Function | undefined;
   useRightClickToHandleActionPanel: boolean | undefined;
 }
@@ -97,6 +98,7 @@ export default class MapboxPathControl implements IControl {
   private layersCustomisation: LayersCustomisation | undefined;
   private directionsThemes: DirectionsTheme[] | undefined;
   private selectedDirectionsTheme: DirectionsTheme | undefined;
+  private themeSelectionType: ThemeSelectionType = "radioList";
 
   constructor(parameters: Parameters | undefined) {
     if (parameters) {
@@ -105,6 +107,7 @@ export default class MapboxPathControl implements IControl {
         layersCustomisation,
         featureCollection,
         lineString,
+        themeSelectionType,
         translate,
         useRightClickToHandleActionPanel,
       } = parameters;
@@ -119,6 +122,10 @@ export default class MapboxPathControl implements IControl {
       }
 
       this.layersCustomisation = layersCustomisation;
+
+      if (themeSelectionType) {
+        this.themeSelectionType = themeSelectionType;
+      }
 
       this.useRightClickToHandleActionPanel = Boolean(
         useRightClickToHandleActionPanel
@@ -165,7 +172,10 @@ export default class MapboxPathControl implements IControl {
       );
       pathControlContainer.className = "mapbox-gl-path-container";
       const pathControlCheckbox = createElement("input", {
+        className: "mapbox-gl-path-theme-selection__checkbox",
         id: "checkbox-path",
+        onchange: (event: { target: HTMLInputElement }) =>
+          (this.isFollowingDirections = event.target.checked),
         type: "checkbox",
       });
       if (hasSelectedDirectionThemes) {
@@ -175,34 +185,24 @@ export default class MapboxPathControl implements IControl {
         );
         this.isFollowingDirections = true;
       }
-      pathControlCheckbox.addEventListener(
-        "change",
-        (event) =>
-          (this.isFollowingDirections = (event.target as HTMLInputElement).checked)
-      );
-      const pathControlSelect = createElement("select", {
-        onchange: (event: { target: HTMLSelectElement }) => {
-          this.selectedDirectionsTheme = this.directionsThemes?.find(
-            (directionsTheme) =>
-              directionsTheme.id === Number(event.target.value)
-          );
-        },
-      });
-      if (this.directionsThemes.length === 1) {
-        pathControlSelect.setAttribute("disabled", "true");
-      }
-      this.directionsThemes.forEach((theme) => {
-        const pathControlSelectOption = createElement("option", {
-          selected: theme.selected,
-          textContent: theme.name,
-          value: theme.id.toString(),
-        });
-        pathControlSelect.append(pathControlSelectOption);
-      });
 
       const pathControlLabel = createElement("label", {
+        className: "mapbox-gl-path-theme-selection__checkbox-label",
         htmlFor: "checkbox-path",
         textContent: this.translate("gl-pathControl.followDirection"),
+      });
+
+      const pathControlSelect = selectThemesElement({
+        props: {
+          onchange: (event: { target: HTMLSelectElement }) => {
+            this.selectedDirectionsTheme = this.directionsThemes?.find(
+              (directionsTheme) =>
+                directionsTheme.id === Number(event.target.value)
+            );
+          },
+        },
+        themes: this.directionsThemes,
+        themeSelectionType: this.themeSelectionType,
       });
 
       pathControlContainer.append(
