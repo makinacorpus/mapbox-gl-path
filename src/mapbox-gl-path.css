@@ -10,3 +10,111 @@
 .mapbox-gl-path-container select {
   margin-left: 8px;
 }
+
+.mapbox-gl-path-theme-selection__checkbox-label {
+  cursor: pointer;
+}
+
+/* UseFul for demo page */
+.mapbox-gl-path-theme-selection {
+  height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: all 0.3ms ease;
+}
+
+.mapbox-gl-path-popup-button {
+  appearance: none;
+  cursor: pointer;
+  display: block;
+  border: none;
+  margin: 0.3rem 0;
+  background: transparent;
+}
+
+.mapbox-gl-path-popup-button:hover,
+.mapbox-gl-path-popup-button:focus {
+  color: skyblue;
+  text-decoration: underline;
+}
+
+.mapbox-gl-path-popup-button::before {
+  display: inline-block;
+  margin-right: 0.2rem;
+}
+
+.mapbox-gl-path-popup-delete::before {
+  content: "❌";
+}
+
+.mapbox-gl-path-popup-createPointOnLine::before {
+  content: "󠀫➕";
+}
+
+.mapbox-gl-path-popup-createIntermediatePointOnLine::before {
+  content: "󠀫➗";
+}
+
+.mapbox-gl-path-popup-loop::before {
+  content: "󠀫🔄";
+}
+
+.mapbox-gl-path-popup-oneWay::before {
+  content: "󠀫↪️";
+}
+
+.mapbox-gl-path-popup-disableFollowDirectionMode::before {
+  content: "󠀫—";
+}
+
+.mapbox-gl-path-popup-enableFollowDirectionMode::before {
+  content: "󠀫〰️";
+}
+
+.mapbox-gl-path-theme-selection__checkbox:checked
+  ~ .mapbox-gl-path-theme-selection {
+  height: auto;
+  padding: 0.3rem 0;
+  opacity: 1;
+  margin: 0.6rem 0 0;
+  border-top: 1px solid #eaeaea;
+}
+
+.mapbox-gl-path-theme-selection__radio {
+  position: absolute;
+  opacity: 0;
+}
+
+.mapbox-gl-path-theme-selection__radio-label {
+  margin: 0.5rem 0;
+  position: relative;
+  height: 2rem;
+  display: block;
+  cursor: pointer;
+}
+
+.mapbox-gl-path-theme-selection__radio-label::before {
+  display: inline-block;
+  width: 2rem;
+  height: 2rem;
+  margin-right: 0.5rem;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 50%;
+  font-size: 1.2rem;
+  text-align: center;
+  line-height: 1.5;
+}
+
+.mapbox-gl-path-theme-selection__radio:checked
+  + .mapbox-gl-path-theme-selection__radio-label::before {
+  background: lightblue;
+  border-color: SkyBlue;
+}
+
+.mapbox-gl-path-theme-selection__radio-label[for*="cycling"]::before {
+  content: "🚴";
+}
+.mapbox-gl-path-theme-selection__radio-label[for*="walking"]::before {
+  content: "🚶";
+}
