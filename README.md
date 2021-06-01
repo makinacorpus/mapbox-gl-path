@@ -15,7 +15,7 @@ npm install @makina-corpus/mapbox-gl-path
 
 ### Usage in your application
 
-#### When using modules
+#### How to import dependencies
 
 ```js
 import mapboxgl from "mapbox-gl";
@@ -127,10 +127,10 @@ interface LayerCustomisation {
 #### `lineString` - GeoJSON.Feature<LineString> | undefined
 
 Like `featureCollection` parameter, it draws the lineString on the map.  
-If the lineString does not contains `path` and `point` properties to describe to `Mapbox-gl-path` how to build a feature collection, automatic Points will be added:
+If the lineString does not contains `path` and `point` properties to describe how to build a feature collection, automatic `Points` will be added:
 
 - If the first and last point have the same coordinate, the lineString is considered to be looped so one point will be placed at that coordinate and two others will be placed at equal distance from each other.
-- Otherwise, two points should be added to the edges.
+- Otherwise, two points will be added to the edges.
 
 If `featureCollection` parameter is set, this `lineString` parameter is ignored.
 
@@ -140,7 +140,7 @@ If `featureCollection` parameter is set, this `lineString` parameter is ignored.
 type ThemeSelectionType = "select" | "radioList";
 ```
 
-Determines the UI for theme selection. Default set to `radioList`.
+Determines the HTML element for theme selection. Default set to `radioList`.
 
 #### `translate` - Function | undefined;
 
@@ -163,14 +163,14 @@ Returns `GeoJSON.FeatureCollection<GeoJSON.Geometry>`
 
 #### getLineString
 
-Get the current drawn FeatureCollection drawn and concatenates the collection as a LineString. The `properties` will contain `path` and `point` element to describe to `Mapbox-gl-path` how to reconstruct the feature collection.
+Get the current drawn FeatureCollection and concatenates the collection as a LineString. The `properties` contain `path` and `point` elements that helps `Mapbox-gl-path` reconstruct the feature collection.
 Returns `Feature<LineString>`
 
 #### setFeatureCollection
 
 Parameter: `GeoJSON.FeatureCollection<GeoJSON.Geometry>`
 
-The `featureCollection` includes features that could be of type `Point` or `Linestring`.  
+The `featureCollection` includes features that can be of type `Point` or `Linestring`.  
 A `Linestring` can be a line between points or a phantom junction line (the latter must have a `isPhantomJunction` properties equals to `true`).
 
 #### setLineString
@@ -178,14 +178,14 @@ A `Linestring` can be a line between points or a phantom junction line (the latt
 Parameter: `GeoJSON.Feature<LineString>`
 
 It draws the lineString on the map.  
-If the lineString does not contains `path` and `point` properties to describe to `Mapbox-gl-path` how to build a feature collection, automatic Points will be added :
+If the lineString does not contains `path` and `point` properties to describe how to build a feature collection, automatic Points will be added :
 
 - If the first and last point have the same coordinate, the lineString is considered to be looped so one point will be placed at that coordinate and two others will be placed at equal distance from each other.
-- Otherwise, two points should be added to the edges.
+- Otherwise, two points will be added to the edges.
 
 #### setLoopTrail
 
-It will draw the path between the last point and the first point. This is not applied if the number of Points is less than 3.
+It will draw the path between the last point and the first point only if point count is greater than 3.
 
 #### setOneWayTrail
 
