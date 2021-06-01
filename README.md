@@ -1,51 +1,122 @@
-# MAPBOX-GL-PATH
+# Mapbox-gl-path
 
-Create path with or without help of various directions API
+_Mapbox-gl-path_ allows you to create paths on a map with or without the help of various directions APIs.  
+It requires [Mapbox-gl-js](https://github.com/mapbox/mapbox-gl-js) (or [Maplibre-gl-js](https://github.com/maplibre/maplibre-gl-js)) as a dependency.
 
-## GETTING STARTED
+## Quick start
 
-```
+### Installation
+
+Install _Mapbox-gl-path_ with your package manager (_npm_ is used in this example):
+
+```bash
 npm install @makina-corpus/mapbox-gl-path
 ```
 
-## DOCUMENTATION
+### Usage in your application
 
-Working example is available at rollup.config.dev.js, look at development part
+#### How to import dependencies
 
+```js
+import mapboxgl from "mapbox-gl";
+import "mapbox-gl/dist/mapbox-gl.css";
+import MapboxPathControl from "@makina-corpus/mapbox-gl-path";
 ```
-const map = new mapboxgl.Map({...});
+
+#### By using it in the `<head>` of your HTML file
+
+```html
+<script src="https://api.mapbox.com/mapbox-gl-js/v2.2.0/mapbox-gl.js"></script>
+<link
+  href="https://api.mapbox.com/mapbox-gl-js/v2.2.0/mapbox-gl.css"
+  rel="stylesheet"
+/>
+<script src="./dist/index.js"></script>
+```
+
+#### Sample configuration
+
+```js
+mapboxgl.accessToken = "YOUR_ACCESS_TOKEN";
+
+const map = new mapboxgl.Map({
+  container: "map",
+  style: "mapbox://styles/mapbox/streets-v11",
+  center: [2.21, 46.22],
+  zoom: 5,
+});
 const mapboxPathControl = new MapboxPathControl(parameters);
 map.addControl(mapboxPathControl);
-const featureCollection = mapboxPathControl.getFeatureCollection();
 ```
 
-### PARAMETERS
+A working example is available at [rollup.config.dev.js](https://github.com/makinacorpus/mapbox-gl-path/blob/master/rollup.config.dev.js), look at development part.  
+To run it, you need to add a `mapboxglToken` environment variable to your `.env` file. See [Run Locally](#user-content-run-locally) section below.
 
-- parameters
+## API Reference
 
-```
+### Parameters
+
+All of the following parameters are optional.
+
+```ts
 {
-  translate: Function | undefined;
-  layersCustomisation: LayersCustomisation | undefined;
-  featureCollection: GeoJSON.FeatureCollection<GeoJSON.Geometry> | undefined;
   directionsThemes: DirectionsTheme[] | undefined;
+  featureCollection: GeoJSON.FeatureCollection<GeoJSON.Geometry> | undefined;
+  layersCustomisation: LayersCustomisation | undefined;
+  lineString: GeoJSON.Feature<LineString> | undefined;
   themeSelectionType: ThemeSelectionType | undefined;
+  translate: Function | undefined;
   useRightClickToHandleActionPanel: boolean | undefined;
 }
 ```
 
-- translate - Function | undefined - A function to provide locales. The default language is set to english (findable in src/i18n.js)
+#### directionsThemes - `DirectionsTheme[] | undefined`
 
-- layersCustomisation - LayersCustomisation | undefined
+`directionsThemes` is an array listing all the themes for providing directions. Each directionTheme has its own parameters:
 
+```ts
+interface DirectionsTheme {
+  id: number;
+  name: string;
+  getPathByCoordinates: (
+    coordinates: number[][]
+  ) => Promise<DirectionsThemeResponse | undefined>;
+  selected: boolean | undefined;
+}
 ```
-LayersCustomisation {
-  pointLayerList: LayerCustomisation;
-  lineLayerList: LayerCustomisation;
-  phantomJunctionLineLayerList: LayerCustomisation;
+
+The `getPathByCoordinates` function should return an object of type `DirectionsThemeResponse` with the coordinates between two points, waypoints and, if necessary, phantom junctions lines between waypoints and points.
+If an element of the array has the prop `selected` set to `true`, it will be pre-selected. If there is more than one `selected`, the first one in the list will be selected.
+
+```ts
+interface DirectionsThemeResponse {
+  coordinates: number[][];
+  waypoints: Waypoints | undefined;
 }
 
-LayerCustomisation {
+interface Waypoints {
+  departure: number[];
+  arrival: number[];
+}
+```
+
+#### `featureCollection` - GeoJSON.FeatureCollection<GeoJSON.Geometry> | undefined
+
+The `featureCollection` includes features that can be of type `Point` or `Linestring`.  
+A `Linestring` can be a line between points or a phantom junction line (the latter must have a `isPhantomJunction` properties equal to `true`).
+
+#### `layersCustomisation` - LayersCustomisation | undefined
+
+`layersCustomisation` parameter allows to define an infinite number of layers for each `Point` or `Linestring` in order to easily style them.
+
+```ts
+interface LayersCustomisation {
+  lineLayerList: LayerCustomisation[];
+  phantomJunctionLineLayerList: LayerCustomisation[];
+  pointLayerList: LayerCustomisation[];
+}
+
+interface LayerCustomisation {
   id: string | undefined;
   layout: AnyLayout;
   paint: AnyPaint;
@@ -53,118 +124,145 @@ LayerCustomisation {
 }
 ```
 
-- featureCollection - `GeoJSON.FeatureCollection<GeoJSON.Geometry> | undefined`
+#### `lineString` - GeoJSON.Feature<LineString> | undefined
 
-The featureCollection includes features that could be type of Point or Linestring\
-Linestring can be a line between points or a phantom junction line
+Like `featureCollection` parameter, it draws the lineString on the map.  
+If the lineString does not contains `path` and `point` properties to describe how to build a feature collection, automatic `Points` will be added:
 
-- lineString - `Feature<LineString> | undefined`
+- If the first and last point have the same coordinate, the lineString is considered to be looped so one point will be placed at that coordinate and two others will be placed at equal distance from each other.
+- Otherwise, two points will be added to the edges.
 
-A feature of Linestring type (only applied if `featureCollection` parameter is not set)
-Some properties can describe section of points and phantom junction
+If `featureCollection` parameter is set, this `lineString` parameter is ignored.
 
-- `path: string[]` : a collection of string describing each junction. Values can be `free`, `direction` or `junction`
-- `points: number[]` : a collection of indexes of the lineString defining points between each junction
-  If there are no properties, Mapbox-gl-path create two points at the edge of the lineString and determine if the path is following direction if `directionsTheme` is defined and `isFollowingDirections` is equal at `true`.
+#### `themeSelectionType` - ThemeSelectionType | undefined
 
-Point
-
-```
-properties {
-  index: number
-}
+```ts
+type ThemeSelectionType = "select" | "radioList";
 ```
 
-Line between points
+Determines the HTML element for theme selection. Default set to `radioList`.
 
-```
-properties {
-  index: number
-  isFollowingDirections: boolean
-}
-```
+#### `translate` - Function | undefined;
 
-phantomJunction line
+A function to provide locales. The default language is English (See [src/i18n.js](https://github.com/makinacorpus/mapbox-gl-path/blob/master/src/i18n.ts)).
 
-```
-properties {
-  index: number
-  isPhantomJunction: boolean
-  isDeparture: boolean
-}
-```
+#### `useRightClickToHandleActionPanel` - boolean | undefined;
 
-- directionsThemes - DirectionsTheme[] | undefined
+Boolean to use right or left mouse click to open the action panel. Default value is `false` (so left click).
 
-```
-DirectionsTheme {
-  id: number;
-  name: string;
-  getPathByCoordinates: (
-    coordinates: number[][]
-  ) => Promise<DirectionsThemeResponse | undefined>;
-}
-
-DirectionsThemeResponse {
-  coordinates: number[][];
-  waypoints: Waypoints | undefined;
-}
-
-Waypoints {
-  departure: number[];
-  arrival: number[];
-}
-```
-
-getPathByCoordinates function return a object of type DirectionsThemeResponse with the coordinates between two points and waypoints, if necessary, to create phantomJunction lines between waypoints and points
-
-- useRightClickToHandleActionPanel - `boolean | undefined` determine if the user should use the left or right click to handle the action panel
-- themeSelectionType - `"select" | "radioList"` UI to choose the theme. Default value is `"radioList"`
-
-### METHODS
-
-#### setLoopTrail
-
-This is not applied if the number of points is less than 3.
-
-#### setOneWayTrail
+### Methods
 
 #### clearFeatureCollection
 
+Clears the paths from the map.
+
 #### getFeatureCollection
 
-return `GeoJSON.FeatureCollection<GeoJSON.Geometry>`
+Get the current FeatureCollection drawn.
+Returns `GeoJSON.FeatureCollection<GeoJSON.Geometry>`
 
 #### getLineString
 
-return `Feature<LineString>`
+Get the current drawn FeatureCollection and concatenates the collection as a LineString. The `properties` contain `path` and `point` elements that helps `Mapbox-gl-path` reconstruct the feature collection.
+Returns `Feature<LineString>`
 
 #### setFeatureCollection
 
-##### Parameter
+Parameter: `GeoJSON.FeatureCollection<GeoJSON.Geometry>`
 
-featureCollection - `GeoJSON.FeatureCollection<GeoJSON.Geometry>`
+The `featureCollection` includes features that can be of type `Point` or `Linestring`.  
+A `Linestring` can be a line between points or a phantom junction line (the latter must have a `isPhantomJunction` properties equals to `true`).
 
 #### setLineString
 
-##### Parameter
+Parameter: `GeoJSON.Feature<LineString>`
 
-lineString - `Feature<LineString>`
+It draws the lineString on the map.  
+If the lineString does not contains `path` and `point` properties to describe how to build a feature collection, automatic Points will be added :
 
-## DEVELOPMENT
+- If the first and last point have the same coordinate, the lineString is considered to be looped so one point will be placed at that coordinate and two others will be placed at equal distance from each other.
+- Otherwise, two points will be added to the edges.
 
+#### setLoopTrail
+
+It will draw the path between the last point and the first point only if point count is greater than 3.
+
+#### setOneWayTrail
+
+It will remove the path between the last point and the first point.
+
+### Events
+
+_Mapbox-gl-path_ fires a number of events. All of these events are namespaced with `MapboxPathControl` and are emitted from the Mapbox GL JS map object. All events are all triggered by user interaction.
+
+```js
+map.on("MapboxPathControl.create", function (event) {
+  console.log(e.createdPoint);
+});
 ```
+
+#### MapboxPathControl.create
+
+Fired when a Point is created.
+The event data is an object with the following shape:
+
+```ts
+{
+  featureCollection: GeoJSON.FeatureCollection<GeoJSON.Geometry>,
+  createdPoint: Feature<Point>,
+}
+```
+
+#### MapboxPathControl.delete
+
+Fired when a Point is deleted.
+The event data is an object with the following shape:
+
+```ts
+{
+  deletedPoint: Feature<Point>,
+}
+```
+
+#### MapboxPathControl.update
+
+Fired when a Point is updated.
+The event data is an object with the following shape:
+
+```ts
+{
+  featureCollection: GeoJSON.FeatureCollection<GeoJSON.Geometry>,
+}
+```
+
+## Run Locally
+
+Clone the project
+
+```bash
 git clone git@github.com:makinacorpus/mapbox-gl-path.git
+```
 
+Go to the project directory
+
+```bash
 cd mapbox-gl-path
+```
 
+Install dependencies
+
+```bash
 npm install
-
-mapboxglToken='"MAPBOXGLTOKEN"' npm run start
 ```
 
-### BUILD
+Start the server
 
+```bash
+mapboxglToken="YOUR_ACCESS_TOKEN" npm run start
 ```
+
+## Build
+
+```bash
 npm run build
 ```
