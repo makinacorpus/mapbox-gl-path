@@ -535,15 +535,16 @@ export default class MapboxPathControl implements IControl {
     );
 
     if (this.directionsThemes && this.directionsThemes.length > 0) {
+      const isFollowingDirectionsText = lineUnderMouse[0].properties!
+        .isFollowingDirections
+        ? "disableFollowDirectionMode"
+        : "enableFollowDirectionMode";
       const changePathModeOnLineButton = createElement("button", {
-        className:
-          "mapbox-gl-path-popup-button mapbox-gl-path-popup-changePathModeOnLine",
+        className: `mapbox-gl-path-popup-button mapbox-gl-path-popup-${isFollowingDirectionsText}`,
         onclick: () => this.changeDirectionsModeOnLine(lineUnderMouse[0]),
-        textContent: !lineUnderMouse[0].properties!.isFollowingDirections
-          ? this.translate("gl-pathControl.enableFollowDirectionMode", {
-              theme: this.selectedDirectionsTheme!.name,
-            })
-          : this.translate("gl-pathControl.disableFollowDirectionMode"),
+        textContent: this.translate(
+          `gl-pathControl.${isFollowingDirectionsText}`
+        ),
       });
       actionsPanelContainer.append(changePathModeOnLineButton);
     }

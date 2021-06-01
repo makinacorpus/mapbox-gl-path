@@ -22,7 +22,7 @@ export default [
       html({
         fileName: "index.html",
         template: () => {
-          const attribute = `lang= "en"`;
+          const attribute = `lang="en"`;
           const meta = `<meta charset="utf-8">`;
           const title = `mapbox-gl-path`;
           const linkFavicon = `<link rel="shortcut icon" type="image/x-icon" href="https://makina-corpus.com/favicon.ico">`;
@@ -50,64 +50,48 @@ export default [
               },
             }],
             lineLayerList: [{
-              paint: { "line-width": 10, "line-color": "#0D47A1" },
+              paint: { "line-width": 4, "line-color": "#0D47A1" },
             }],
             phantomJunctionLineLayerList: [{
               paint: {
-                "line-width": 10,
+                "line-width": 4,
                 "line-color": "#0D47A1",
                 "line-dasharray": [1, 1],
               },
             }],
           }`;
           const featureCollection = `undefined`;
-          const directionsThemes = `[{
-            id: 1,
-            name: "mapbox cycling",
+          const directionsThemes = `[
+            { theme: "cycling" }, 
+            { theme: "walking", selected: true }
+          ].map(({ theme, selected }, index) => ({
+            id: index,
+            name: "Mapbox "+theme,
+            selected,
             getPathByCoordinates: async (coordinates) =>
               await fetch(
-                'https://api.mapbox.com/directions/v5/mapbox/cycling/'+coordinates[0].toString()+';'+coordinates[1].toString()+'?geometries=geojson&overview=full&access_token=${mapboxglToken.slice(
-                  1,
-                  -1
-                )}',
+                'https://api.mapbox.com/directions/v5/mapbox/'+theme+'/'+coordinates.join(';')+'?geometries=geojson&overview=full&access_token=${mapboxglToken}',
                 {
                   method: "GET",
                   headers: { "Content-Type": "application/json" },
                 }
               )
-                .then((response) => response.json())
-                .then((data) => data.code === "Ok"
-                      ? { coordinates: data.routes[0].geometry.coordinates, waypoints: { departure: data.waypoints[0].location, arrival: data.waypoints[1].location }}
-                      : undefined
-                )
-          },
-          {
-            id: 2,
-            name: "mapbox walking",
-            selected: true,
-            getPathByCoordinates: async (coordinates) =>
-              await fetch(
-                'https://api.mapbox.com/directions/v5/mapbox/walking/'+coordinates[0].toString()+';'+coordinates[1].toString()+'?geometries=geojson&overview=full&access_token=${mapboxglToken.slice(
-                  1,
-                  -1
-                )}',
-                {
-                  method: "GET",
-                  headers: { "Content-Type": "application/json" },
-                }
+              .then((response) => response.json())
+              .then((data) => data.code === "Ok"
+                    ? { coordinates: data.routes[0].geometry.coordinates, waypoints: { departure: data.waypoints[0].location, arrival: data.waypoints[1].location }}
+                    : undefined
               )
-                .then((response) => response.json())
-                .then((data) => data.code === "Ok"
-                      ? { coordinates: data.routes[0].geometry.coordinates, waypoints: { departure: data.waypoints[0].location, arrival: data.waypoints[1].location }}
-                      : undefined
-                )
-          }
-        ]`;
+          }))`;
           const scriptPage = `
             <script type="module">
               import MapboxPathControl from "./index.js";
-              mapboxgl.accessToken = ${mapboxglToken};
-              var map = new mapboxgl.Map({ container: "map", style: "mapbox://styles/mapbox/light-v10", center: [2.21, 46.22], zoom: 5 });
+              mapboxgl.accessToken = "${mapboxglToken}";
+              var map = new mapboxgl.Map({ container: "map", style: "mapbox://styles/mapbox/streets-v11", center: [2.21, 46.22], zoom: 5 });
+              map.on('error', ({ error }) => {
+                // Invalid access token
+                console.error(error)
+                document.write(error.message)
+              });
               window.mapboxPathControl = new MapboxPathControl({
                 layersCustomisation: ${layersCustomisation},
                 featureCollection: ${featureCollection},
