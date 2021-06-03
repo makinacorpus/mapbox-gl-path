@@ -197,7 +197,7 @@ _Mapbox-gl-path_ fires a number of events. All of these events are namespaced wi
 
 ```js
 map.on("MapboxPathControl.create", function (event) {
-  console.log(e.createdPoint);
+  console.log(event.createdPoint);
 });
 ```
 
