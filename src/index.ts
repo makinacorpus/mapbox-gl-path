@@ -406,14 +406,18 @@ export default class MapboxPathControl implements IControl {
 
       const newLines = lineSplit(nearestLineString, nearestPointInLineString);
 
+      const {
+        features: [from, to = from],
+      } = newLines;
+
       this.selectedReferencePointIndex =
         nearestLineString.properties!.index + 1;
 
       this.createNewPointAndLine(
         nearestPointInLineString.geometry.coordinates,
         nearestLineString.properties!.isFollowingDirections,
-        newLines.features[0].geometry!.coordinates,
-        newLines.features[1].geometry!.coordinates,
+        from.geometry!.coordinates,
+        to.geometry!.coordinates,
         nearestLineString.properties!.index
       );
 
@@ -787,11 +791,16 @@ export default class MapboxPathControl implements IControl {
         currentPoint
       );
       const newLines = lineSplit(currentLineString, nearestPoint);
+
+      const {
+        features: [from, to = from],
+      } = newLines;
+
       this.createNewPointAndLine(
         nearestPoint.geometry.coordinates,
         lineUnderMouse[0].properties!.isFollowingDirections,
-        newLines.features[0].geometry!.coordinates,
-        newLines.features[1].geometry!.coordinates,
+        from.geometry!.coordinates,
+        to.geometry!.coordinates,
         lineUnderMouseIndex
       );
 
