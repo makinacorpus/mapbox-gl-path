@@ -235,6 +235,28 @@ The event data is an object with the following shape:
 }
 ```
 
+#### MapboxPathControl.loop
+
+Fired when a Loop is activated.
+The event data is an object with the following shape:
+
+```ts
+{
+  featureCollection: GeoJSON.FeatureCollection<GeoJSON.Geometry>,
+}
+```
+
+#### MapboxPathControl.unLoop
+
+Fired when a Loop is deactivated.
+The event data is an object with the following shape:
+
+```ts
+{
+  featureCollection: GeoJSON.FeatureCollection<GeoJSON.Geometry>,
+}
+```
+
 ## Run Locally
 
 Clone the project
