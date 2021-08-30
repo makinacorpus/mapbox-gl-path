@@ -963,9 +963,14 @@ export default class MapboxPathControl implements IControl {
     );
 
     this.referencePoints = this.referencePoints.slice(0, -1);
+
     this.updateSource();
 
     this.actionsPanel.remove();
+
+    this.map!.fire("MapboxPathControl.loop", {
+      featureCollection: this.getFeatureCollection(),
+    });
   }
 
   public async setOneWayTrail(): Promise<void> {
@@ -977,7 +982,12 @@ export default class MapboxPathControl implements IControl {
     this.deletePoint();
 
     this.updateSource();
+
     this.actionsPanel.remove();
+
+    this.map!.fire("MapboxPathControl.unLoop", {
+      featureCollection: this.getFeatureCollection(),
+    });
   }
 
   private updateSource(fireEvent: boolean = true): void {
