@@ -668,6 +668,8 @@ export default class MapboxPathControl implements IControl {
 
     this.referencePoints.splice(currentLineIndex + 1, 0, referencePoint);
 
+    const directionID = this.selectedDirectionsTheme!.id;
+
     if (previousLineCoordinates) {
       const previousLineBetweenReferencePoint: Feature<LineString> = {
         type: "Feature",
@@ -678,6 +680,11 @@ export default class MapboxPathControl implements IControl {
         properties: {
           index: currentLineIndex,
           isFollowingDirections,
+          ...(isFollowingDirections && {
+            directionID:
+              this.linesBetweenReferencePoints[currentLineIndex]?.properties!
+                .directionID ?? directionID,
+          }),
         },
       };
 
@@ -710,6 +717,11 @@ export default class MapboxPathControl implements IControl {
         properties: {
           index: currentLineIndex! + 1,
           isFollowingDirections,
+          ...(isFollowingDirections && {
+            directionID:
+              this.linesBetweenReferencePoints[currentLineIndex]?.properties!
+                .directionID ?? directionID,
+          }),
         },
       };
 
