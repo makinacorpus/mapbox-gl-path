@@ -1172,13 +1172,13 @@ export default class MapboxPathControl implements IControl {
       coordinates.length > 2 &&
       coordinates[0].join() === coordinates[coordinates.length - 1].join();
 
+    const defaultLabel = this.isFollowingDirections
+      ? `direction:${this.selectedDirectionsTheme!.id}`
+      : "free";
+
     // If there are no `points` properties to describe the lineString,
     // we create two points on the edges and assume the direction is enabled by its current state
-    const defaultReference = [
-      0,
-      this.isFollowingDirections ? "direction" : "free",
-      coordinates.length - 1,
-    ];
+    const defaultReference = [0, defaultLabel, coordinates.length - 1];
 
     // And if it's a loop trail, 2 intermediates points are required
     if (this.isLoopTrail) {
@@ -1186,9 +1186,9 @@ export default class MapboxPathControl implements IControl {
         2,
         1,
         Math.round((coordinates.length * 1) / 3),
-        this.isFollowingDirections ? "direction" : "free",
+        defaultLabel,
         Math.round((coordinates.length * 2) / 3),
-        this.isFollowingDirections ? "direction" : "free"
+        defaultLabel
       );
     }
 
@@ -1210,9 +1210,9 @@ export default class MapboxPathControl implements IControl {
           Number.isFinite(indexedCoordinates) &&
           !(
             (array[index - 1] === "junctionDeparture" &&
-              array[index + 1] === "direction") ||
+              (array[index + 1] as string).startsWith("direction")) ||
             (array[index + 1] === "junctionArrival" &&
-              array[index - 1] === "direction")
+              (array[index - 1] as string).startsWith("direction"))
           )
       )
       // Build all points
@@ -1237,6 +1237,7 @@ export default class MapboxPathControl implements IControl {
         if (typeof item !== "string") {
           return memo;
         }
+        const [typeOfLine, directionID] = item.split(":");
         const fromIndex = Number(array[index - 1] ?? 0);
         const toIndex = Number(array[index + 1] ?? coordinates.length - 1);
 
@@ -1250,7 +1251,7 @@ export default class MapboxPathControl implements IControl {
           prevIndex +
           Number(
             item === "junctionDeparture" ||
-              (["free", "direction"].includes(item) &&
+              (["free", "direction"].includes(typeOfLine) &&
                 lastItem?.properties!.isDeparture !== true)
           );
 
@@ -1263,7 +1264,8 @@ export default class MapboxPathControl implements IControl {
           properties: {
             index: nextIndex,
             ...(!item.startsWith("junction") && {
-              isFollowingDirections: item === "direction",
+              isFollowingDirections: typeOfLine === "direction",
+              directionID,
             }),
             ...(item.startsWith("junction") && {
               isPhantomJunction: true,
@@ -1330,7 +1332,9 @@ export default class MapboxPathControl implements IControl {
                 }`
               );
             } else if (feature.properties!.isFollowingDirections) {
-              lineStringify.paths.push("direction");
+              lineStringify.paths.push(
+                `direction:${feature.properties!.directionID}`
+              );
             } else {
               lineStringify.paths.push("free");
             }
