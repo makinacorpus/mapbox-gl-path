@@ -1,0 +1,152 @@
+import Bleed from "nextra-theme-docs/bleed";
+
+import Map from "../../components/Map";
+import { pathControl, icons, map } from "../../examples/custom-ui";
+
+# Custom UI
+
+You can change the whole design of the UI related to `Mapbox-gl-path`.
+
+## Example
+
+<Map pathControl={pathControl} icons={icons} map={map} position="top-left" />
+<Bleed>
+
+```javascript
+<script>
+  mapboxgl.accessToken = '<your access token here>';
+  const map = new mapboxgl.Map({
+    container: 'map', // container ID
+    center: [2.3522, 48.8566],
+    style: "mapbox://styles/mapbox/dark-v10",
+    zoom: 14,
+  });
+
+  // Load arrow icon
+  map.on('load', () => {
+    map.loadImage(
+      '/assets/arrow.png',
+      (error, image) => {
+      if (error) throw error;
+        map.addImage('arrow', image);
+      }
+    );
+  });
+
+  // Helpers to convert indexes to alphabetical indexes
+  const convertNumberToAlpha = (num) => {
+  const letterPosition = Math.floor(num / 26);
+  return letterPosition >= 0
+    ? convertNumberToAlpha(letterPosition - 1) +
+        String.fromCharCode(65 + (num % 26))
+    : "";
+  };
+
+  const expression = Array.from({ length: 78 }, (_, index) => {
+    return [["==", ["get", "index"], index], convertNumberToAlpha(index)];
+  }).flat();
+  // end helpers
+
+  const mapboxPathControl = new MapboxPathControl(
+    // More information in the documentation https://docs.mapbox.com/mapbox-gl-js/style-spec/layers/
+    layersCustomisation: {
+    pointLayerList: [
+      {
+        // First Point layer to display the "glow"
+        paint: {
+          "circle-radius": 14,
+          "circle-color": "#f7d4bc",
+        },
+      },
+      {
+        // Second Point layer to display white circle
+        paint: {
+          "circle-radius": 10,
+          "circle-color": "#ffffff",
+          "circle-stroke-width": 2,
+          "circle-stroke-color": "#846b8a",
+        },
+      },
+      {
+        // Third Point layer to Alphabetical indexes
+        paint: {
+          "text-color": "#000",
+        },
+        type: "symbol",
+        layout: {
+          "text-field": ["case", ...expression, ["get", "index"]],
+          "text-size": 14,
+          "text-allow-overlap": true,
+        },
+      },
+    ],
+    lineLayerList: [
+      {
+        // First LineString layer to display the "glow"
+        paint: { "line-width": 8, "line-color": "#f7d4bc" },
+      },
+      {
+        // Second LineString layer to display the path
+        paint: { "line-width": 4, "line-color": "#846b8a" },
+      },
+      {
+        // Third LineString layer to the arrow icon
+        type: "symbol",
+        layout: {
+          "icon-image": "arrow",
+          "icon-size": 0.6,
+          "symbol-placement": "line",
+          "icon-allow-overlap": true,
+        },
+      },
+    ],
+    phantomJunctionLineLayerList: [
+      {
+        paint: {
+          "line-width": 4,
+          "line-color": "#c98bb9",
+          "line-dasharray": [1, 1],
+        },
+      },
+    ],
+  });
+
+  map.addControl(mapboxPathControl, "top-left");
+</script>
+```
+
+</Bleed>
+
+## The control box
+
+### Positioning
+
+First of all, you can position the control box in one of the four corners of the map.
+Without an explicit position, it will positioned on the top right of map. If you want to move it in another place, you have to write the position
+when you attach the `MapboxPathControl` to the map.
+
+```javascript
+map.addControl(pathControl, "top-left");
+```
+
+More information from [Mapbox documentation](https://docs.mapbox.com/mapbox-gl-js/api/map/#map#addcontrol).
+
+### Theme selection type
+
+For selecting the provider you can have the choice to display a `select` tag or a list of `radio` tags.
+You have the [`themeSelectionType` parameter](/api-reference/parameters#themeselectiontype) to display the desired interface.
+
+## Styles of control box and the contextual popup
+
+By default, there are no CSS applied to the control box and the popup. But `Mapbox-gl-path` provides a lot of `className` for each element to style it with ease.
+
+## Styles of the pathes
+
+To draw pathes on the map, there are 3 kinds of layers:
+
+- Points (type `Points`) displayed under the mouse click. Theses points end `LineString` and the user car interact to move or delete them.
+- Lines (type `LineString`) between 2 points.
+- Phantom junction (type `LineString`) at the begin (and/or the end) of lines when the user's click is out of any route.
+  With, `layersCustomisation` parameter you can add an infinity of layers to each of them in order to have a design which fit with your needs.
+
+If this [`layersCustomisation` parameter](/api-reference/parameters#layerscustomisation) isn't filled, all layers will be drawn in dark.

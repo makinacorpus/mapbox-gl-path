@@ -1,0 +1,60 @@
+import themeConfig from "../../theme.config";
+export const mapLibreAliasLink = `${themeConfig.docsRepositoryBase}/next.config.js#L13`;
+
+# Installation
+
+Install <em>Mapbox-gl-path</em> with your package manager:
+
+```bash
+npm install @makina-corpus/mapbox-gl-path
+```
+
+## Usage in your application
+
+In the following lines of code, we use the package _Mapbox-gl_ as dependency. [See specification for _Mapblibre-gl_](#specifications-for-maplibre-gl-as-dependency)
+
+### How to import dependencies
+
+```js
+import mapboxgl from "mapbox-gl";
+import "mapbox-gl/dist/mapbox-gl.css";
+import MapboxPathControl from "@makina-corpus/mapbox-gl-path";
+```
+
+### By using it in the `<head />` of your `HTML` file
+
+```html
+<script src="https://api.mapbox.com/mapbox-gl-js/v2.2.0/mapbox-gl.js"></script>
+<link
+  href="https://api.mapbox.com/mapbox-gl-js/v2.2.0/mapbox-gl.css"
+  rel="stylesheet"
+/>
+<script src="./dist/index.js"></script>
+```
+
+### Sample configuration
+
+```js
+mapboxgl.accessToken = "YOUR_ACCESS_TOKEN";
+
+const map = new mapboxgl.Map({
+  container: "map",
+  style: "mapbox://styles/mapbox/streets-v11",
+  center: [2.21, 46.22],
+  zoom: 5,
+});
+
+const mapboxPathControl = new MapboxPathControl(parameters);
+
+map.addControl(mapboxPathControl);
+```
+
+## Specifications for _Maplibre-gl_ as dependency
+
+The installation and usage are the same of examples above: You need to
+install the dependency _Maplibre-gl_ instead of _Mapbox-gl_ and replace all keyword occurencies.
+
+You **don't have to import _Mapbox-gl_** to your project. However
+_Mapbox-gl-path_ uses the `Popup` function from _Mapbox-gl_; this function also
+exists in _MapLibre-gl_ (which is exactly the same) so you need to alias
+`Mapbox-gl` by `MapLibre-gl` (see the {"(implementation)[" + themeConfig.docsRepositoryBase + "/next.config.js#L13]"}" {"(Mon markdown)[" + themeConfig.docsRepositoryBase + "/monlien]"} of this documentation website codebase).
