@@ -1,0 +1,26 @@
+import Callout from "nextra-theme-docs/callout";
+import PlayWithData from "../../examples/PlayWithData";
+
+# Play with your own data
+
+There are two ways to load data to display: at init of the map, and at anytime.  
+The easiest way to display data is to fill one of the both parameters: `lineString` or `featureCollection`.  
+And then you can (erase and) load another set of data with one of the boths methods: `setLineString` or `setFeatureCollection`. Theses methods works exactly in the same way of the parameters above.
+
+## Example
+
+<PlayWithData />
+
+## `lineString`
+
+If the `lineString` is correctly described (meaning properties of each features) to fit with _Mapbox-gl-path_ (for example it was previously exported with _Mapbox-gl-path_), all points will be correctly positioned.
+If not, an autodermination of `Points` will be drawn.
+
+## `featureCollection`
+
+Your feature collection must contains `lineString` and `Points` (positionned on coordinates matching with `lineString`) data.
+
+<Callout>
+  The organization of the file must be strictly well formated. If not, it's
+  preferable to use `setLineString` methods to avoid some issues.
+</Callout>
