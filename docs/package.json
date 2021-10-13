@@ -12,6 +12,7 @@
     "@makina-corpus/mapbox-gl-path": "^1.9.0",
     "@reach/tabs": "^0.16.1",
     "@tmcw/togeojson": "^4.5.0",
+    "autoprefixer": "^10.3.7",
     "maplibre-gl": "^1.15.2",
     "next": "^11.1.0",
     "next-transpile-modules": "^8.0.0",
