@@ -3,7 +3,7 @@
 _Mapbox-gl-path_ allows you to create paths on a map with or without the help of various directions APIs.  
 It requires [Mapbox-gl-js](https://github.com/mapbox/mapbox-gl-js) (or [Maplibre-gl-js](https://github.com/maplibre/maplibre-gl-js)) as a dependency.
 
-## Documentation
+## Documentation and demo
 
 👉 See our [documentation website](https://mapbox-gl-path.netlify.app/).
 
