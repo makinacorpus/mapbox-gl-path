@@ -10,7 +10,7 @@ const expression = Array.from({ length: 78 }, (_, index) => {
   return [["==", ["get", "index"], index], convertNumberToAlpha(index)];
 }).flat();
 
-const pathControl = {
+export const pathControl = {
   layersCustomisation: {
     pointLayerList: [
       {
