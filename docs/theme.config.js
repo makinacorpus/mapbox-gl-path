@@ -1,7 +1,7 @@
 export default {
   github: "https://github.com/makinacorpus/mapbox-gl-path/", // GitHub link in the navbar
   docsRepositoryBase:
-    "https://github.com/makinacorpus/mapbox-gl-path/blob/master/docs", // base URL for the docs repository
+    "https://github.com/makinacorpus/mapbox-gl-path/blob/master/docs/pages/", // base URL for the docs repository
   titleSuffix: "",
   nextLinks: true,
   prevLinks: true,
