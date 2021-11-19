@@ -31,7 +31,7 @@ export default [
           const links = `${linkFavicon}${linkMapbox}${linkPage}`;
           const content = `<div id="map" style="width: 100vw; height: 100vh;"></div>`;
           const scriptMapbox = `<script src="https://api.mapbox.com/mapbox-gl-js/v1.12.0/mapbox-gl.js"></script>`;
-          const layersCustomisation = `{
+          const layersCustomization = `{
             pointLayerList: [{
               paint: {
                 "circle-radius": 10,
@@ -93,7 +93,7 @@ export default [
                 document.write(error.message)
               });
               window.mapboxPathControl = new MapboxPathControl({
-                layersCustomisation: ${layersCustomisation},
+                layersCustomization: ${layersCustomization},
                 featureCollection: ${featureCollection},
                 directionsThemes: ${directionsThemes},
               });

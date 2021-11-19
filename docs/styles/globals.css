@@ -88,12 +88,12 @@
   content: url("/icons/un-loop.svg");
 }
 
-.mapbox-gl-path-popup-disableFollowDirectionMode::before {
-  content: url("/icons/un-follow-direction.svg");
+.mapbox-gl-path-popup-disableFollowDirectionsMode::before {
+  content: url("/icons/un-follow-directions.svg");
 }
 
-.mapbox-gl-path-popup-enableFollowDirectionMode::before {
-  content: url("/icons/follow-direction.svg");
+.mapbox-gl-path-popup-enableFollowDirectionsMode::before {
+  content: url("/icons/follow-directions.svg");
 }
 
 .mapbox-gl-path-theme-selection__checkbox:checked

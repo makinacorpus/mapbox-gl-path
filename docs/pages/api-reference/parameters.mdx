@@ -6,7 +6,7 @@ All of the following parameters are optional.
 {
   directionsThemes: DirectionsTheme[] | undefined;
   featureCollection: GeoJSON.FeatureCollection<GeoJSON.Geometry> | undefined;
-  layersCustomisation: LayersCustomisation | undefined;
+  layersCustomization: LayersCustomization | undefined;
   lineString: GeoJSON.Feature<LineString> | undefined;
   themeSelectionType: ThemeSelectionType | undefined;
   translate: Function | undefined;
@@ -19,13 +19,13 @@ All of the following parameters are optional.
 `DirectionsTheme[] | undefined`
 
 `directionsThemes` is an array listing all the themes for providing directions.  
-Each `directionTheme` has its own parameters:
+Each `directionsTheme` has its own parameters:
 
-| Parameters             | Type                                                            | Description                                                                                                                                                                                                               |
+| Parameter              | Type                                                            | Description                                                                                                                                                                                                               |
 | ---------------------- | --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `id`                   | `number`                                                        | Unique identifier                                                                                                                                                                                                         |
-| `name`                 | `string`                                                        | The name and label of the provider. It will be displayed on the map to select this direction.                                                                                                                             |
-| `getPathByCoordinates` | `(coordinates: number[][]) => Promise<DirectionsThemeResponse>` | The `getPathByCoordinates` function should return an object of type `DirectionsThemeResponse` with the coordinates between two points, waypoints and, if necessary, phantom junctions lines between waypoints and points. |
+| `name`                 | `string`                                                        | The name and label of the provider. It will be displayed on the map to select this directions theme.                                                                                                                      |
+| `getPathByCoordinates` | `(coordinates: number[][]) => Promise<DirectionsThemeResponse>` | The `getPathByCoordinates` function should return an object of type `DirectionsThemeResponse` with the coordinates between two points, waypoints and, if necessary, phantom junction lines between waypoints and points.  |
 
 ```ts
 interface DirectionsThemeResponse {
@@ -46,20 +46,20 @@ interface Waypoints {
 The `featureCollection` includes features that can be of type `Point` or `Linestring`.  
 A `Linestring` can be a line between points or a phantom junction line (the latter must have a `isPhantomJunction` properties equal to `true`).
 
-## layersCustomisation
+## layersCustomization
 
-`LayersCustomisation | undefined`
+`LayersCustomization | undefined`
 
-`layersCustomisation` parameter allows to define an infinite number of layers for each `Point` or `Linestring` in order to easily style them.
+`layersCustomization` parameter allows to define an infinite number of layers for each `Point` or `Linestring` in order to easily style them.
 
 ```ts
-interface LayersCustomisation {
-  lineLayerList: LayerCustomisation[];
-  phantomJunctionLineLayerList: LayerCustomisation[];
-  pointLayerList: LayerCustomisation[];
+interface LayersCustomization {
+  lineLayerList: LayerCustomization[];
+  phantomJunctionLineLayerList: LayerCustomization[];
+  pointLayerList: LayerCustomization[];
 }
 
-interface LayerCustomisation {
+interface LayerCustomization {
   id: string | undefined;
   layout: AnyLayout;
   paint: AnyPaint;
@@ -72,11 +72,11 @@ interface LayerCustomisation {
 `GeoJSON.Feature<LineString> | undefined`
 
 Like `featureCollection` parameter, it draws the `lineString` on
-the map. If the lineString does not contains path and point properties
-to describe how to build a feature collection, automatic `Points`
-will be added:
+the map. If the lineString does not contain path and point properties
+to describe how to build a feature collection, `Points`
+will be automatically added:
 
-- If the first and last point have the same coordinate, the lineString is considered to be looped so one point will be placed at that coordinate and two others will be placed at equal distance from each other.
+- If the first and last points have the same coordinate, the lineString is considered to be looped so one point will be placed at that coordinate and two others will be placed at equal distance from each other.
 - Otherwise, two points will be added to the edges.
 
 If `featureCollection` parameter is set, this `lineString` parameter is ignored.
@@ -89,7 +89,7 @@ If `featureCollection` parameter is set, this `lineString` parameter is ignored.
 type ThemeSelectionType = "select" | "radioList";
 ```
 
-Determines the HTML element for theme selection. Default set to `radioList`.
+Determines the HTML element for theme selection. Default to `radioList`.
 
 ## translate
 
@@ -114,4 +114,4 @@ A function to provide locales. The locales are the following :
 
 `boolean | undefined`
 
-`Boolean` to use right or left mouse click to open the action panel. Default value is `false` (so left click).
+`Boolean` determines whether left or right click should be used to open the action panel. Default to `false` (that is left click).

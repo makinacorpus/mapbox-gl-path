@@ -13,7 +13,7 @@ import {
   defaultPointLayerList,
   defaultLineLayerList,
   defaultPhantomJunctionLineLayerList,
-  LayersCustomisation,
+  LayersCustomization,
   phantomJunctionLineLayerId,
 } from "./source-and-layers";
 import { translateMock, defaultLocales } from "./i18n";
@@ -42,7 +42,7 @@ interface Waypoints {
 export type ThemeSelectionType = "select" | "radioList";
 
 interface Parameters {
-  layersCustomisation: LayersCustomisation | undefined;
+  layersCustomization: LayersCustomization | undefined;
   featureCollection: GeoJSON.FeatureCollection<GeoJSON.Geometry> | undefined;
   lineString: GeoJSON.Feature<LineString> | undefined;
   directionsThemes: DirectionsTheme[] | undefined;
@@ -95,7 +95,7 @@ export default class MapboxPathControl implements IControl {
   });
   private isFollowingDirections = false;
   private isLoopTrail = false;
-  private layersCustomisation: LayersCustomisation | undefined;
+  private layersCustomization: LayersCustomization | undefined;
   private directionsThemes: DirectionsTheme[] | undefined;
   private selectedDirectionsTheme: DirectionsTheme | undefined;
   private themeSelectionType: ThemeSelectionType = "radioList";
@@ -104,7 +104,7 @@ export default class MapboxPathControl implements IControl {
     if (parameters) {
       const {
         directionsThemes,
-        layersCustomisation,
+        layersCustomization,
         featureCollection,
         lineString,
         themeSelectionType,
@@ -121,7 +121,7 @@ export default class MapboxPathControl implements IControl {
           directionsThemes[0];
       }
 
-      this.layersCustomisation = layersCustomisation;
+      this.layersCustomization = layersCustomization;
 
       if (themeSelectionType) {
         this.themeSelectionType = themeSelectionType;
@@ -230,7 +230,7 @@ export default class MapboxPathControl implements IControl {
       lineLayerList = defaultLineLayerList,
       phantomJunctionLineLayerList = defaultPhantomJunctionLineLayerList,
       pointLayerList = defaultPointLayerList,
-    } = this.layersCustomisation || {};
+    } = this.layersCustomization || {};
 
     const groupLayerList = [
       {

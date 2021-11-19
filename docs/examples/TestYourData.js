@@ -9,10 +9,10 @@ import MontBlancTour from "./files/MontBlancTour.json";
 import HalfDomeTreck from "./files/HalfDomeTreck.json";
 
 import ImportGeomFile from "../components/ImportGeomFile";
-import pathControl from "../examples/introduction";
+import pathControl from "./introduction";
 import themeConfig from "../theme.config";
 
-const PlayWithData = () => {
+const TestYourData = () => {
   const [map, setMap] = useState(null);
 
   const onMapLoaded = (mapLoaded) => {
@@ -54,7 +54,7 @@ const PlayWithData = () => {
               <>
                 <TabList className="p-4">
                   <Tab className={getTabClassName(0)}>
-                    🎉 Test with your own data
+                    🎉 Test your own data
                   </Tab>
                   <Tab className={getTabClassName(1)}>
                     👇 Or pick one example below
@@ -75,15 +75,15 @@ const PlayWithData = () => {
                           className="px-4 py-2 rounded-md bg-blue-100 text-blue-700"
                           onClick={() => loadData(MontBlancTour)}
                         >
-                          Tour of Mont Blanc trekking
+                          Tour of Mont Blanc trek
                         </button>
                         <p>
                           <span>A lineString</span>.{" "}
                           <a
                             href={`${themeConfig.docsRepositoryBase}/examples/files/MontBlancTour.json`}
                           >
-                            See file.
-                          </a>
+                            See file
+                          </a>.
                         </p>
                       </li>
                       <li className="p-4">
@@ -95,14 +95,14 @@ const PlayWithData = () => {
                         </button>
                         <p>
                           <span>
-                            A lineString previously described by Mapbox-gl-path
+                            A lineString previously exported and described by Mapbox-gl-path
                           </span>
                           .{" "}
                           <a
                             href={`${themeConfig.docsRepositoryBase}/examples/files/HalfDomeTreck.json`}
                           >
-                            See file.
-                          </a>
+                            See file
+                          </a>.
                         </p>
                       </li>
                     </ul>
@@ -117,4 +117,4 @@ const PlayWithData = () => {
   );
 };
 
-export default PlayWithData;
+export default TestYourData;

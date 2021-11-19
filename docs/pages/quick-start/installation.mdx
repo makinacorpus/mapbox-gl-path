@@ -11,9 +11,9 @@ npm install @makina-corpus/mapbox-gl-path
 
 ## Usage in your application
 
-In the following lines of code, we use the package _Mapbox-gl_ as dependency. [See specification for _Mapblibre-gl_](#specifications-for-maplibre-gl-as-dependency)
+In the following examples, we'll use the package `Mapbox-gl` as dependency.  See [How to use Maplibre-gl as a dependency](#specifications-for-maplibre-gl-as-dependency) if you wish to use the alternative map library.
 
-### How to import dependencies
+### Using imports:
 
 ```js
 import mapboxgl from "mapbox-gl";
@@ -21,7 +21,7 @@ import "mapbox-gl/dist/mapbox-gl.css";
 import MapboxPathControl from "@makina-corpus/mapbox-gl-path";
 ```
 
-### By using it in the `<head />` of your `HTML` file
+Using legacy tags in your `<head>` section:
 
 ```html
 <script src="https://api.mapbox.com/mapbox-gl-js/v2.2.0/mapbox-gl.js"></script>
@@ -49,12 +49,12 @@ const mapboxPathControl = new MapboxPathControl(parameters);
 map.addControl(mapboxPathControl);
 ```
 
-## Specifications for _Maplibre-gl_ as dependency
+## How to use `Maplibre-gl` as dependency
 
-The installation and usage are the same of examples above: You need to
-install the dependency _Maplibre-gl_ instead of _Mapbox-gl_ and replace all keyword occurencies.
+The installation and usage are very similar to examples above, but you need to install the dependency `Maplibre-gl` instead of `Mapbox-gl`
+and replace all occurences of `Mapbox-gl` with `Maplibre-gl` in your code." 
 
-You **don't have to import _Mapbox-gl_** to your project. However
-_Mapbox-gl-path_ uses the `Popup` function from _Mapbox-gl_; this function also
-exists in _MapLibre-gl_ (which is exactly the same) so you need to alias
-`Mapbox-gl` by `MapLibre-gl` (see the <a href={mapLibreAliasLink}>implementation</a> of this documentation website codebase).
+You **don't have to import `Mapbox-gl`** to your project. However
+`Mapbox-gl-path` uses the `Popup` function from `Mapbox-gl`; this function also
+exists in `MapLibre-gl` (which is essentially a clone of `Mapbox-gl` when writing these lines) so you need to alias
+`Mapbox-gl` by `MapLibre-gl` (see <a href={mapLibreAliasLink}>this example</a>).

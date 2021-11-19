@@ -49,7 +49,7 @@ You can change the whole design of the UI related to `Mapbox-gl-path`.
 
   const mapboxPathControl = new MapboxPathControl(
     // More information in the documentation https://docs.mapbox.com/mapbox-gl-js/style-spec/layers/
-    layersCustomisation: {
+    layersCustomization: {
     pointLayerList: [
       {
         // First Point layer to display the "glow"
@@ -122,7 +122,7 @@ You can change the whole design of the UI related to `Mapbox-gl-path`.
 ### Positioning
 
 First of all, you can position the control box in one of the four corners of the map.
-Without an explicit position, it will positioned on the top right of map. If you want to move it in another place, you have to write the position
+Without an explicit position, it will positioned in the top right of map. If you want to move it to another place, you have to explicity write the position
 when you attach the `MapboxPathControl` to the map.
 
 ```javascript
@@ -133,20 +133,20 @@ More information from [Mapbox documentation](https://docs.mapbox.com/mapbox-gl-j
 
 ### Theme selection type
 
-For selecting the provider you can have the choice to display a `select` tag or a list of `radio` tags.
+For selecting the provider you have the choice to display a `select` tag or a list of `radio` tags.
 You have the [`themeSelectionType` parameter](/api-reference/parameters#themeselectiontype) to display the desired interface.
 
 ## Styles of control box and the contextual popup
 
-By default, there are no CSS applied to the control box and the popup. But `Mapbox-gl-path` provides a lot of `className` for each element to style it with ease.
+By default, there are no CSS applied to the control box and the popup. But `Mapbox-gl-path` provides a lot of `className` for each element to style them with ease.
 
-## Styles of the pathes
+## Styles of the paths
 
-To draw pathes on the map, there are 3 kinds of layers:
+To draw paths on the map, 3 stacks of layers are available to you:
 
-- Points (type `Points`) displayed under the mouse click. Theses points end `LineString` and the user car interact to move or delete them.
+- Points (type `Point`) end `LineString` and the user can interact to move or delete them.
 - Lines (type `LineString`) between 2 points.
-- Phantom junction (type `LineString`) at the begin (and/or the end) of lines when the user's click is out of any route.
-  With, `layersCustomisation` parameter you can add an infinity of layers to each of them in order to have a design which fit with your needs.
+- Phantom junctions (type `LineString`) at the start (and/or the end) of lines when the user clicks out of any route.
+  With the `layersCustomization` parameter you can add an infinity of layers to each of stacks in order to have a design which fit your needs.
 
-If this [`layersCustomisation` parameter](/api-reference/parameters#layerscustomisation) isn't filled, all layers will be drawn in dark.
+If this [`layersCustomization` parameter](/api-reference/parameters#layerscustomization) isn't set, all layers will be drawn in black.

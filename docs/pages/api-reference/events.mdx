@@ -1,7 +1,8 @@
 # Events
 
-_Mapbox-gl-path_ fires a number of events. All of these events are namespaced with `MapboxPathControl` and are emitted from the Mapbox GL JS map object. All events are all triggered by user interaction.
+_Mapbox-gl-path_ fires a number of events. All of these events are namespaced with `MapboxPathControl` and are emitted from the Mapbox GL JS map object. All events are triggered by user interactions.
 
+**Example**:
 ```js
 map.on("MapboxPathControl.create", function (event) {
   console.log(event.createdPoint);
@@ -11,7 +12,7 @@ map.on("MapboxPathControl.create", function (event) {
 ## MapboxPathControl.create
 
 Fired when a Point is created.
-The event data is an object with the following shape:
+The parameter `event` has the following structure:
 
 ```typescript
 {
@@ -23,7 +24,7 @@ The event data is an object with the following shape:
 ## MapboxPathControl.delete
 
 Fired when a Point is deleted.
-The event data is an object with the following shape:
+The parameter `event` has the following structure:
 
 ```typescript
 {
@@ -34,7 +35,7 @@ The event data is an object with the following shape:
 ## MapboxPathControl.update
 
 Fired when a Point is updated.
-The event data is an object with the following shape:
+The parameter `event` has the following structure:
 
 ```typescript
 {
@@ -44,8 +45,8 @@ The event data is an object with the following shape:
 
 ## MapboxPathControl.loop
 
-Fired when a Loop is activated.
-The event data is an object with the following shape:
+Fired when path looping is activated.
+The parameter `event` has the following structure:
 
 ```typescript
 {
@@ -55,8 +56,8 @@ The event data is an object with the following shape:
 
 ## MapboxPathControl.unLoop
 
-Fired when a Loop is deactivated.
-The event data is an object with the following shape:
+Fired when path looping is deactivated.
+The parameter `event` has the following structure:
 
 ```typescript
 {

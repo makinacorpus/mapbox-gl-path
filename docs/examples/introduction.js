@@ -1,5 +1,5 @@
 const pathControl = {
-  layersCustomisation: {
+  layersCustomization: {
     pointLayerList: [
       {
         paint: {

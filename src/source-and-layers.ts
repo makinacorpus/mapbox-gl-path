@@ -42,13 +42,13 @@ export const defaultPhantomJunctionLineLayerList = [
   },
 ];
 
-export interface LayersCustomisation {
-  lineLayerList: LayerCustomisation[];
-  phantomJunctionLineLayerList: LayerCustomisation[];
-  pointLayerList: LayerCustomisation[];
+export interface LayersCustomization {
+  lineLayerList: LayerCustomization[];
+  phantomJunctionLineLayerList: LayerCustomization[];
+  pointLayerList: LayerCustomization[];
 }
 
-export interface LayerCustomisation {
+export interface LayerCustomization {
   id: string | undefined;
   layout: AnyLayout;
   paint: AnyPaint;

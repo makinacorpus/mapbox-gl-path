@@ -11,7 +11,7 @@ const expression = Array.from({ length: 78 }, (_, index) => {
 }).flat();
 
 export const pathControl = {
-  layersCustomisation: {
+  layersCustomization: {
     pointLayerList: [
       {
         paint: {
