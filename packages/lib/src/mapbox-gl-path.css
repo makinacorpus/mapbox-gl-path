@@ -63,11 +63,11 @@
   content: "󠀫↪️";
 }
 
-.mapbox-gl-path-popup-disableFollowDirectionMode::before {
+.mapbox-gl-path-popup-disableFollowDirectionsMode::before {
   content: "󠀫—";
 }
 
-.mapbox-gl-path-popup-enableFollowDirectionMode::before {
+.mapbox-gl-path-popup-enableFollowDirectionsMode::before {
   content: "󠀫〰️";
 }
 

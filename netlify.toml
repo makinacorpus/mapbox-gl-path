@@ -1,4 +1,4 @@
 [build]
-  base="docs/"
+  base="packages/docs/"
   publish="out/"
   command="npm run build"

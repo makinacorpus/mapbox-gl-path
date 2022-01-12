@@ -10,7 +10,6 @@ const withNextra = require("nextra")({
 
 module.exports = withTM(
   withNextra({
-    target: "serverless",
     webpack: (config) => {
       Object.assign(config.resolve.alias, {
         "mapbox-gl": "maplibre-gl",

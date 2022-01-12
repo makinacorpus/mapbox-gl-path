@@ -1,7 +1,7 @@
 {
   "name": "mapbox-gl-path-documentation",
   "version": "1.0.0",
-  "description": "",
+  "description": "Documentation and demo of Mapbox-gl-path package",
   "author": "florian.sommariva@makina-corpus.com",
   "scripts": {
     "dev": "next dev",
@@ -9,15 +9,14 @@
     "start": "next start"
   },
   "dependencies": {
-    "@makina-corpus/mapbox-gl-path": "^1.9.0",
     "@reach/tabs": "^0.16.1",
     "@tmcw/togeojson": "^4.5.0",
     "autoprefixer": "^10.3.7",
     "maplibre-gl": "^1.15.2",
-    "next": "^11.1.0",
-    "next-transpile-modules": "^8.0.0",
-    "nextra": "^1.1.0",
-    "nextra-theme-docs": "^1.2.2",
+    "next": "^12.0.8",
+    "next-transpile-modules": "^9.0.0",
+    "nextra": "^2.0.0-beta.5",
+    "nextra-theme-docs": "^2.0.0-beta.5",
     "react": "^17.0.2",
     "react-dom": "^17.0.2"
   },

@@ -22,5 +22,5 @@ and edit it to set the `NEXT_PUBLIC_MAPBOX_TOKEN` variable.
 ## Usage
 
 ```bash
-$ npm run dev
+npm run dev
 ```

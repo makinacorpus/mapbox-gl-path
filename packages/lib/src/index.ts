@@ -189,7 +189,7 @@ export default class MapboxPathControl implements IControl {
       const pathControlLabel = createElement("label", {
         className: "mapbox-gl-path-theme-selection__checkbox-label",
         htmlFor: "checkbox-path",
-        textContent: this.translate("gl-pathControl.followDirection"),
+        textContent: this.translate("gl-pathControl.followDirections"),
       });
 
       const pathControlSelect = selectThemesElement({
@@ -541,8 +541,8 @@ export default class MapboxPathControl implements IControl {
     if (this.directionsThemes && this.directionsThemes.length > 0) {
       const isFollowingDirectionsText = lineUnderMouse[0].properties!
         .isFollowingDirections
-        ? "disableFollowDirectionMode"
-        : "enableFollowDirectionMode";
+        ? "disableFollowDirectionsMode"
+        : "enableFollowDirectionsMode";
       const changePathModeOnLineButton = createElement("button", {
         className: `mapbox-gl-path-popup-button mapbox-gl-path-popup-${isFollowingDirectionsText}`,
         onclick: () => this.changeDirectionsModeOnLine(lineUnderMouse[0]),
