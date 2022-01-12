@@ -1,0 +1,117 @@
+# Parameters
+
+All of the following parameters are optional.
+
+```typescript
+{
+  directionsThemes: DirectionsTheme[] | undefined;
+  featureCollection: GeoJSON.FeatureCollection<GeoJSON.Geometry> | undefined;
+  layersCustomization: LayersCustomization | undefined;
+  lineString: GeoJSON.Feature<LineString> | undefined;
+  themeSelectionType: ThemeSelectionType | undefined;
+  translate: Function | undefined;
+  useRightClickToHandleActionPanel: boolean | undefined;
+}
+```
+
+## directionsThemes
+
+`DirectionsTheme[] | undefined`
+
+`directionsThemes` is an array listing all the themes for providing directions.  
+Each `directionsTheme` has its own parameters:
+
+| Parameter              | Type                                                            | Description                                                                                                                                                                                                               |
+| ---------------------- | --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`                   | `number`                                                        | Unique identifier                                                                                                                                                                                                         |
+| `name`                 | `string`                                                        | The name and label of the provider. It will be displayed on the map to select this directions theme.                                                                                                                      |
+| `getPathByCoordinates` | `(coordinates: number[][]) => Promise<DirectionsThemeResponse>` | The `getPathByCoordinates` function should return an object of type `DirectionsThemeResponse` with the coordinates between two points, waypoints and, if necessary, phantom junction lines between waypoints and points.  |
+
+```ts
+interface DirectionsThemeResponse {
+  coordinates: number[][];
+  waypoints: Waypoints | undefined;
+}
+
+interface Waypoints {
+  departure: number[];
+  arrival: number[];
+}
+```
+
+## featureCollection
+
+`GeoJSON.FeatureCollection<GeoJSON.Geometry> | undefined`
+
+The `featureCollection` includes features that can be of type `Point` or `Linestring`.  
+A `Linestring` can be a line between points or a phantom junction line (the latter must have a `isPhantomJunction` properties equal to `true`).
+
+## layersCustomization
+
+`LayersCustomization | undefined`
+
+`layersCustomization` parameter allows to define an infinite number of layers for each `Point` or `Linestring` in order to easily style them.
+
+```ts
+interface LayersCustomization {
+  lineLayerList: LayerCustomization[];
+  phantomJunctionLineLayerList: LayerCustomization[];
+  pointLayerList: LayerCustomization[];
+}
+
+interface LayerCustomization {
+  id: string | undefined;
+  layout: AnyLayout;
+  paint: AnyPaint;
+  type: string | undefined;
+}
+```
+
+## lineString
+
+`GeoJSON.Feature<LineString> | undefined`
+
+Like `featureCollection` parameter, it draws the `lineString` on
+the map. If the lineString does not contain path and point properties
+to describe how to build a feature collection, `Points`
+will be automatically added:
+
+- If the first and last points have the same coordinate, the lineString is considered to be looped so one point will be placed at that coordinate and two others will be placed at equal distance from each other.
+- Otherwise, two points will be added to the edges.
+
+If `featureCollection` parameter is set, this `lineString` parameter is ignored.
+
+## themeSelectionType
+
+`ThemeSelectionType | undefined`
+
+```ts
+type ThemeSelectionType = "select" | "radioList";
+```
+
+Determines the HTML element for theme selection. Default to `radioList`.
+
+## translate
+
+`Function | undefined`
+
+A function to provide locales. The locales are the following :
+
+```json
+{
+  "gl-pathControl.followDirections": "Follow directions",
+  "gl-pathControl.enableFollowDirectionModes": "Enable directions with: {{theme}}",
+  "gl-pathControl.disableFollowDirectionModes": "Disable directions",
+  "gl-pathControl.createPoint": "Create point",
+  "gl-pathControl.createIntermediatePoint": "Create intermediate point",
+  "gl-pathControl.deletePoint": "Delete point",
+  "gl-pathControl.loopPoint": "Round trip",
+  "gl-pathControl.oneWayPoint": "One way"
+}
+```
+
+## useRightClickToHandleActionPanel
+
+`boolean | undefined`
+
+`Boolean` determines whether left or right click should be used to open the action panel. Default to `false` (that is left click).

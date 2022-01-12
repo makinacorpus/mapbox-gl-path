@@ -1,41 +1,16 @@
 {
   "name": "@makina-corpus/mapbox-gl-path",
-  "version": "1.9.0",
   "description": "Create path with or without help of various directions API",
-  "repository": "github:makinacorpus/mapbox-gl-path",
-  "main": "dist/index.js",
   "scripts": {
-    "start": "rollup -c rollup.config.dev.js --watch",
-    "build": "rollup -c rollup.config.prod.js",
-    "prepare": "npm run build"
+    "buildLib": "npm --workspace=@makina-corpus/mapbox-gl-path run build",
+    "buildDocs": "npm --workspace=mapbox-gl-path-documentation run build",
+    "build": "npm run buildLib && npm run buildDocs",
+    "dev": "npm --workspace=@makina-corpus/mapbox-gl-path run start",
+    "docs": "npm --workspace=mapbox-gl-path-documentation run dev"
   },
-  "author": "bastien.alvez@makina-corpus.com",
-  "license": "MIT",
-  "dependencies": {
-    "@turf/helpers": "^6.3.0",
-    "@turf/line-split": "^6.3.0",
-    "@turf/nearest-point-on-line": "^6.3.0",
-    "@turf/point-to-line-distance": "^6.3.0",
-    "lodash.debounce": "^4.0.8"
-  },
-  "peerDependencies": {
-    "mapbox-gl": ">=1.0.0 <2.0.0"
-  },
-  "devDependencies": {
-    "@rollup/plugin-commonjs": "^15.1.0",
-    "@rollup/plugin-html": "^0.2.0",
-    "@rollup/plugin-node-resolve": "^9.0.0",
-    "@rollup/plugin-typescript": "^6.0.0",
-    "@types/geojson": "^7946.0.7",
-    "@types/lodash.debounce": "^4.0.6",
-    "@types/mapbox-gl": "^1.12.2",
-    "mapbox-gl": "^1.12.0",
-    "prettier": "^2.1.2",
-    "rollup": "^2.29.0",
-    "rollup-plugin-css-only": "^2.1.0",
-    "rollup-plugin-livereload": "^2.0.0",
-    "rollup-plugin-serve": "^1.0.4",
-    "tslib": "^2.0.2",
-    "typescript": "^4.0.3"
-  }
+  "repository": "github:makinacorpus/mapbox-gl-path",
+  "workspaces": [
+    "packages/lib",
+    "packages/docs"
+  ]
 }

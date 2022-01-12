@@ -1,0 +1,40 @@
+# Methods
+
+## clearFeatureCollection
+
+Clears path from the map.
+
+## getFeatureCollection
+
+Returns the current `FeatureCollection` displayed.  
+Returns `GeoJSON.FeatureCollection<GeoJSON.Geometry>`
+
+## getLineString
+
+Returns the current `FeatureCollection` concatenated as a LineString. The `properties` key contains `path` and `point` elements that help `Mapbox-gl-path` reconstruct the feature collection.
+Returns `Feature<LineString>`
+
+## setFeatureCollection
+
+Parameter: `GeoJSON.FeatureCollection<GeoJSON.Geometry>`
+
+The `featureCollection` includes features that can be of type `Point` or `Linestring`.  
+A `Linestring` can be a line between points or a phantom junction line.
+
+## setLineString
+
+Parameter: `GeoJSON.Feature<LineString>`
+
+It draws the lineString on the map.  
+If the lineString does not contain `path` and `point` properties to describe how to build a feature collection, `Points` will be automatically added :
+
+- If the first and last points have the same coordinate, the lineString is considered to be looped so one point will be placed at that coordinate and two others will be placed at equal distance from each other.
+- Otherwise, two points will be added to the edges.
+
+## setLoopTrail
+
+Draws the path between the last point and the first point only if point count is greater than 3.
+
+## setOneWayTrail
+
+Removes the path between the last point and the first point.

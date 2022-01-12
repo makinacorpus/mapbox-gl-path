@@ -1,0 +1,26 @@
+import Callout from "nextra-theme-docs/callout";
+import TestYourData from "../../examples/TestYourData";
+
+# Test your own data online
+
+There are two ways to load data to be displayed: when initializing the map via properties, or afterwards via function calls.  
+The easiest way to display data is to fill one of both parameters: `lineString` or `featureCollection`.  
+And then you can load another set of data with one of boths methods: `setLineString` or `setFeatureCollection`.
+
+## Example
+
+<TestYourData />
+
+## `lineString`
+
+If the `lineString` is correctly described to fit with _Mapbox-gl-path_ (probably by using `getLineString` _Mapbox-gl-path_ method), all points and paths will be correctly positioned.
+If not, an autodermination of `Points` will be drawn.
+
+## `featureCollection`
+
+Your feature collection must contains `lineString` and `Points` (positionned on coordinates matching with `lineString`) data.
+
+<Callout>
+  The organization of the file must be strictly well formated. If not, it's
+  preferable to use `setLineString` methods to avoid some issues.
+</Callout>
